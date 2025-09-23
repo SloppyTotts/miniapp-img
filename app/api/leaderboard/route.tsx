@@ -109,57 +109,54 @@ export async function GET(req: Request) {
         )}
         
         {/* Content Overlay */}
-        <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: PADDING, paddingRight: PADDING, paddingTop: PADDING, gap: 28, color: '#fff', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 120, gap: 32, color: '#fff', position: 'relative', zIndex: 1 }}>
+          {/* PFP at top center */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
             {pfpDataUrl ? (
               <img
                 src={pfpDataUrl}
                 alt=""
-                width={120}
-                height={120}
+                width={140}
+                height={140}
                 style={{ borderRadius: 9999, border: '4px solid rgba(255,255,255,0.15)', background: '#111' }}
               />
             ) : (
-              <div style={{ width: 120, height: 120, display: 'flex', borderRadius: 9999, background: '#222', border: '4px solid rgba(255,255,255,0.15)' }} />
+              <div style={{ width: 140, height: 140, display: 'flex', borderRadius: 9999, background: '#222', border: '4px solid rgba(255,255,255,0.15)' }} />
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', fontSize: 56, fontWeight: 700 }}>{username}</div>
-              <div style={{ display: 'flex', fontSize: 30, opacity: 0.9 }}>Level {level}</div>
-            </div>
-
-            <div style={{ display: 'flex', marginLeft: 'auto' as any }}>
-              <div
-                style={{
-                  display: 'flex',
-                  paddingTop: 12,
-                  paddingBottom: 12,
-                  paddingLeft: 22,
-                  paddingRight: 22,
-                  borderRadius: 9999,
-                  background: '#A78BFA',
-                  color: '#0b0b10',
-                  fontWeight: 800,
-                  fontSize: 30,
-                }}
-              >
-                Rank #{rank}
-              </div>
+            {/* Username below PFP */}
+            <div style={{ display: 'flex', fontSize: 48, fontWeight: 700 }}>@{username}</div>
+            
+            {/* Level button below username */}
+            <div
+              style={{
+                display: 'flex',
+                paddingTop: 12,
+                paddingBottom: 12,
+                paddingLeft: 24,
+                paddingRight: 24,
+                borderRadius: 8,
+                background: '#60A5FA',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 24,
+              }}
+            >
+              Level {level}
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'flex', fontSize: 28, opacity: 0.9 }}>
-              XP {xpCurrent} / {xpNext} ({progressPct}%)
+          {/* XP Progress at bottom */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginTop: 'auto', paddingBottom: 80 }}>
+            <div style={{ display: 'flex', fontSize: 24, opacity: 0.9 }}>
+              {xpCurrent}/{xpNext} XP
             </div>
             <div style={{ display: 'flex', width: barWidth, height: barHeight, borderRadius: 9999, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', width: fillWidth, height: barHeight, background: '#60A5FA' }} />
+              <div style={{ display: 'flex', width: fillWidth, height: barHeight, background: 'linear-gradient(90deg, #60A5FA 0%, #3B82F6 100%)' }} />
             </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 18, width: CONTENT_WIDTH }}>
-            <div style={{ display: 'flex', fontSize: 24, opacity: 0.85 }}>fitlocker.io</div>
-            <div style={{ display: 'flex', fontSize: 24, opacity: 0.85 }}>#FitLocker #Base #Fitness</div>
+            <div style={{ display: 'flex', fontSize: 20, opacity: 0.9 }}>
+              {progressPct}%
+            </div>
           </div>
         </div>
       </div>
