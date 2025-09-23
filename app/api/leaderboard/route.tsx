@@ -1,4 +1,6 @@
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 import { ImageResponse } from 'next/og';
 
@@ -18,7 +20,7 @@ function parseIntSafe(v: string | null, dflt: number): number {
   return Number.isFinite(n) && n >= 0 ? n : dflt;
 }
 
-// Edge-safe base64 from ArrayBuffer (no Buffer)
+// Edge-safe base64 from ArrayBuffer
 function arrayBufferToBase64(buf: ArrayBuffer): string {
   let binary = '';
   const bytes = new Uint8Array(buf);
@@ -30,7 +32,7 @@ async function fetchAsDataUrl(
   url: string | null | undefined,
   fallbackUrl: string
 ): Promise<string> {
-  const target = url && url.trim().length > 0 ? url : fallbackUrl;
+  const target = url && url.trim() ? url : fallbackUrl;
 
   const tryFetch = async (u: string) => {
     const controller = new AbortController();
@@ -49,8 +51,7 @@ async function fetchAsDataUrl(
     const ct = res.headers.get('content-type') || '';
     const buf = await res.arrayBuffer().catch(() => null);
     if (ct.startsWith('image/') && buf && buf.byteLength > 0) {
-      const b64 = arrayBufferToBase64(buf);
-      return `data:${ct};base64,${b64}`;
+      return `data:${ct};base64,${arrayBufferToBase64(buf)}`;
     }
   }
 
@@ -59,8 +60,7 @@ async function fetchAsDataUrl(
     const ct2 = res2.headers.get('content-type') || 'image/png';
     const buf2 = await res2.arrayBuffer().catch(() => null);
     if (ct2.startsWith('image/') && buf2 && buf2.byteLength > 0) {
-      const b642 = arrayBufferToBase64(buf2);
-      return `data:${ct2};base64,${b642}`;
+      return `data:${ct2};base64,${arrayBufferToBase64(buf2)}`;
     }
   }
 
@@ -69,7 +69,6 @@ async function fetchAsDataUrl(
 }
 
 export async function GET(req: Request) {
-  // Ultra-minimal safe mode image (no <img>, no external fetches)
   const renderSafe = (text = 'FitLocker') =>
     new ImageResponse(
       (
@@ -95,7 +94,6 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
 
-    // Force a non-cached minimal render if requested
     if (searchParams.get('safe') === '1') {
       return renderSafe('FitLocker');
     }
@@ -109,7 +107,7 @@ export async function GET(req: Request) {
 
     const pfpDataUrl = await fetchAsDataUrl(pfpParam, DEFAULT_PFP_URL);
 
-    // Stable progress bar sizing (avoid % widths)
+    // Fixed-width progress bar to avoid % width crashes
     const barWidth = 1000;
     const progress = Math.max(0, Math.min(1, xpNext > 0 ? xpCurrent / xpNext : 0));
     const fillWidth = Math.max(0, Math.min(barWidth, Math.round(barWidth * progress)));
@@ -127,7 +125,7 @@ export async function GET(req: Request) {
           overflow: 'hidden',
         }}
       >
-        {/* Simple linear overlay (no external background image) */}
+        {/* Simple overlay only (no external background image) */}
         <div
           style={{
             position: 'absolute',
@@ -218,7 +216,6 @@ export async function GET(req: Request) {
       </div>
     );
 
-    // Important: disable caching until we confirm non-zero bytes from Vercel
     return new ImageResponse(img, {
       width: WIDTH,
       height: HEIGHT,
