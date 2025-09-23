@@ -10,8 +10,12 @@ export async function GET(req: Request) {
   const xpCurrent = Number(searchParams.get('xpCurrent') || '0');
   const xpNext = Number(searchParams.get('xpNext') || '500');
   const rank = searchParams.get('rank') || '—';
-  const pfp = searchParams.get('pfp') || '';
   const background = searchParams.get('background') || '';
+
+  // Default PFP if none provided
+  const pfp =
+    searchParams.get('pfp') ||
+    'https://img.fitlocker.io/images/default-pfp.png';
 
   try {
     return new ImageResponse(
@@ -31,37 +35,34 @@ export async function GET(req: Request) {
             fontFamily: 'Inter, system-ui, Arial',
           }}
         >
-          {/* top spacer */}
-          <div style={{ width: 1, height: 160, display: 'flex' }} />
+          <div style={{ width: 1, height: 140, display: 'flex' }} />
 
-          {/* avatar */}
-          {pfp ? (
-            <div
-              style={{
-                width: 220,
-                height: 220,
-                borderRadius: 999,
-                padding: 8,
-                background: 'linear-gradient(90deg,#00E0FF,#8B5CF6,#00FF88)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={pfp}
-                width={204}
-                height={204}
-                style={{ borderRadius: 999, objectFit: 'cover' }}
-              />
-            </div>
-          ) : null}
-
-          {/* rank */}
+          {/* Avatar */}
           <div
             style={{
-              marginTop: 40,
+              width: 220,
+              height: 220,
+              borderRadius: 999,
+              padding: 8,
+              background: 'linear-gradient(90deg,#00E0FF,#8B5CF6,#00FF88)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={pfp}
+              width={204}
+              height={204}
+              style={{ borderRadius: 999, objectFit: 'cover' }}
+            />
+          </div>
+
+          {/* Rank */}
+          <div
+            style={{
+              marginTop: 28,
               fontSize: 80,
               fontWeight: 800,
               background: 'linear-gradient(90deg,#00E0FF,#8B5CF6,#00FF88)',
@@ -73,16 +74,28 @@ export async function GET(req: Request) {
             {`Rank #${rank}`}
           </div>
 
-          {/* stats + bar */}
+          {/* Username */}
           <div
             style={{
-              marginTop: 140,
+              marginTop: 12,
+              fontSize: 36,
+              fontWeight: 700,
+              color: '#e5e7eb',
+              display: 'flex',
+            }}
+          >
+            {username}
+          </div>
+
+          {/* Stats + progress */}
+          <div
+            style={{
+              marginTop: 90,
               width: 1080,
               display: 'flex',
               flexDirection: 'column',
             }}
           >
-            {/* header row */}
             <div
               style={{
                 display: 'flex',
@@ -113,7 +126,6 @@ export async function GET(req: Request) {
               </div>
             </div>
 
-            {/* progress track */}
             <div
               style={{
                 width: '100%',
