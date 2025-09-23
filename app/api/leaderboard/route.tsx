@@ -16,6 +16,7 @@ const DEFAULT_XP_CURRENT = 0;
 const DEFAULT_XP_NEXT = 500;
 
 const DEFAULT_PFP_URL = 'https://img.fitlocker.io/images/wc.png';
+const DEFAULT_BG_URL = 'https://img.fitlocker.io/images/CheckInBKG.png';
 
 function parseIntSafe(v: string | null, dflt: number): number {
   const n = v ? parseInt(v, 10) : NaN;
@@ -71,6 +72,7 @@ export async function GET(req: Request) {
     const xpCurrent = parseIntSafe(searchParams.get('xpCurrent'), DEFAULT_XP_CURRENT);
     const xpNext = parseIntSafe(searchParams.get('xpNext'), DEFAULT_XP_NEXT);
     const pfpParam = searchParams.get('pfp') || '';
+    const bgParam = searchParams.get('background') || '';
 
     const barWidth = CONTENT_WIDTH;
     const barHeight = 28;
@@ -82,9 +84,32 @@ export async function GET(req: Request) {
     if (pfpParam) pfpDataUrl = await fetchAsDataUrlStrict(pfpParam);
     if (!pfpDataUrl) pfpDataUrl = await fetchAsDataUrlStrict(DEFAULT_PFP_URL);
 
+    let bgDataUrl: string | null = null;
+    if (bgParam) bgDataUrl = await fetchAsDataUrlStrict(bgParam);
+    if (!bgDataUrl) bgDataUrl = await fetchAsDataUrlStrict(DEFAULT_BG_URL);
+
     const img = (
-      <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', flexDirection: 'column', backgroundColor: '#0b0b10' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: PADDING, paddingRight: PADDING, paddingTop: PADDING, gap: 28, color: '#fff' }}>
+      <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        {/* Background Image */}
+        {bgDataUrl ? (
+          <img
+            src={bgDataUrl}
+            alt=""
+            width={WIDTH}
+            height={HEIGHT}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <div style={{ width: WIDTH, height: HEIGHT, background: '#0b0b10' }} />
+        )}
+        
+        {/* Content Overlay */}
+        <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: PADDING, paddingRight: PADDING, paddingTop: PADDING, gap: 28, color: '#fff', position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
             {pfpDataUrl ? (
               <img
