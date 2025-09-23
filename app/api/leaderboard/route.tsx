@@ -19,45 +19,58 @@ function parseIntSafe(v: string | null, dflt: number): number {
   return Number.isFinite(n) && n >= 0 ? n : dflt;
 }
 
+// Edge-safe base64 from ArrayBuffer (no Buffer)
+function arrayBufferToBase64(buf: ArrayBuffer): string {
+  let binary = '';
+  const bytes = new Uint8Array(buf);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+  // btoa is available in Edge runtime
+  return btoa(binary);
+}
+
 async function fetchAsDataUrl(
   url: string | null | undefined,
   fallbackUrl: string
 ): Promise<string> {
   const target = url && url.trim().length > 0 ? url : fallbackUrl;
-  try {
+
+  const tryFetch = async (u: string) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 2500);
-    const res = await fetch(target, {
+    const res = await fetch(u, {
       headers: { Accept: 'image/*' },
       cache: 'no-store',
       signal: controller.signal,
-    });
+    }).catch(() => null as unknown as Response);
     clearTimeout(timeout);
+    return res;
+  };
 
-    const ok = res.ok && (res.headers.get('content-type') || '').startsWith('image/');
-    if (!ok) {
-      const res2 = await fetch(fallbackUrl, { headers: { Accept: 'image/*' }, cache: 'no-store' });
-      const buf2 = await res2.arrayBuffer();
-      const mime2 = res2.headers.get('content-type') || 'image/png';
-      return `data:${mime2};base64,${Buffer.from(buf2).toString('base64')}`;
+  // primary
+  const res = await tryFetch(target);
+  if (res && res.ok) {
+    const ct = res.headers.get('content-type') || '';
+    const buf = await res.arrayBuffer().catch(() => null);
+    if (ct.startsWith('image/') && buf && buf.byteLength > 0) {
+      const b64 = arrayBufferToBase64(buf);
+      return `data:${ct};base64,${b64}`;
     }
-
-    const buf = await res.arrayBuffer();
-    if (!buf || buf.byteLength === 0) {
-      const res2 = await fetch(fallbackUrl, { headers: { Accept: 'image/*' }, cache: 'no-store' });
-      const buf2 = await res2.arrayBuffer();
-      const mime2 = res2.headers.get('content-type') || 'image/png';
-      return `data:${mime2};base64,${Buffer.from(buf2).toString('base64')}`;
-    }
-
-    const mime = res.headers.get('content-type') || 'image/png';
-    return `data:${mime};base64,${Buffer.from(buf).toString('base64')}`;
-  } catch {
-    const res = await fetch(fallbackUrl, { headers: { Accept: 'image/*' }, cache: 'no-store' });
-    const buf = await res.arrayBuffer();
-    const mime = res.headers.get('content-type') || 'image/png';
-    return `data:${mime};base64,${Buffer.from(buf).toString('base64')}`;
   }
+
+  // fallback
+  const res2 = await tryFetch(fallbackUrl);
+  if (res2 && res2.ok) {
+    const ct2 = res2.headers.get('content-type') || 'image/png';
+    const buf2 = await res2.arrayBuffer().catch(() => null);
+    if (ct2.startsWith('image/') && buf2 && buf2.byteLength > 0) {
+      const b642 = arrayBufferToBase64(buf2);
+      return `data:${ct2};base64,${b642}`;
+    }
+  }
+
+  // last resort: transparent 1x1 PNG data URL
+  return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
 }
 
 export async function GET(req: Request) {
@@ -75,17 +88,16 @@ export async function GET(req: Request) {
 
     const pfpDataUrl = await fetchAsDataUrl(pfpParam, DEFAULT_PFP_URL);
 
+    // Background is optional; render gradient if fetch fails
     let bgDataUrl: string | null = null;
     try {
       const bgTarget = bgParam && bgParam.trim().length > 0 ? bgParam : DEFAULT_BG_URL;
       const res = await fetch(bgTarget, { headers: { Accept: 'image/*' }, cache: 'no-store' });
       const isImage = (res.headers.get('content-type') || '').startsWith('image/');
-      if (res.ok && isImage) {
-        const buf = await res.arrayBuffer();
-        if (buf && buf.byteLength > 0) {
-          const mime = res.headers.get('content-type') || 'image/png';
-          bgDataUrl = `data:${mime};base64,${Buffer.from(buf).toString('base64')}`;
-        }
+      const buf = isImage ? await res.arrayBuffer() : null;
+      if (res.ok && buf && buf.byteLength > 0) {
+        const mime = res.headers.get('content-type') || 'image/png';
+        bgDataUrl = `data:${mime};base64,${arrayBufferToBase64(buf)}`;
       }
     } catch {
       bgDataUrl = null;
@@ -206,9 +218,7 @@ export async function GET(req: Request) {
     return new ImageResponse(img, {
       width: WIDTH,
       height: HEIGHT,
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
-      },
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60' },
     });
   } catch {
     const fallback = (
