@@ -2,6 +2,30 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
+async function fetchAsDataUrl(url: string, timeoutMs = 2000): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: {
+        'User-Agent': 'FitLocker-OG/1.0 (+https://fitlocker.io)',
+        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        'Referer': 'https://fitlocker.io/',
+      },
+      cache: 'no-store',
+    });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const ct = res.headers.get('content-type') || 'image/png';
+    const ab = await res.arrayBuffer();
+    const b64 = Buffer.from(ab).toString('base64');
+    return `data:${ct};base64,${b64}`;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
@@ -12,10 +36,15 @@ export async function GET(req: Request) {
   const rank = searchParams.get('rank') || '—';
   const background = searchParams.get('background') || '';
 
-  // Default PFP if none provided
-  const pfp =
-    searchParams.get('pfp') ||
-    'https://img.fitlocker.io/images/default-pfp.png';
+  const pfpParam = searchParams.get('pfp') || '';
+  const defaultPfp = 'https://img.fitlocker.io/images/default-pfp.png';
+
+  // Try to inline PFP (works even if the host blocks hotlinking)
+  let pfpSrc = defaultPfp;
+  if (pfpParam) {
+    const inlined = await fetchAsDataUrl(pfpParam, 2000);
+    pfpSrc = inlined || pfpParam || defaultPfp;
+  }
 
   try {
     return new ImageResponse(
@@ -37,7 +66,6 @@ export async function GET(req: Request) {
         >
           <div style={{ width: 1, height: 140, display: 'flex' }} />
 
-          {/* Avatar */}
           <div
             style={{
               width: 220,
@@ -52,14 +80,13 @@ export async function GET(req: Request) {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={pfp}
+              src={pfpSrc}
               width={204}
               height={204}
               style={{ borderRadius: 999, objectFit: 'cover' }}
             />
           </div>
 
-          {/* Rank */}
           <div
             style={{
               marginTop: 28,
@@ -74,7 +101,6 @@ export async function GET(req: Request) {
             {`Rank #${rank}`}
           </div>
 
-          {/* Username */}
           <div
             style={{
               marginTop: 12,
@@ -87,7 +113,6 @@ export async function GET(req: Request) {
             {username}
           </div>
 
-          {/* Stats + progress */}
           <div
             style={{
               marginTop: 90,
@@ -181,7 +206,8 @@ export async function GET(req: Request) {
         width: 1200,
         height: 800,
         headers: {
-          'Cache-Control': 'public, no-cache, no-store, must-revalidate, max-age=0',
+          'Cache-Control':
+            'public, no-cache, no-store, must-revalidate, max-age=0',
         },
       }
     );
