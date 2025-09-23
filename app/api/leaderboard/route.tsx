@@ -39,7 +39,7 @@ export async function GET(req: Request) {
   const pfpParam = searchParams.get('pfp') || '';
   const defaultPfp = 'https://img.fitlocker.io/images/default-pfp.png';
 
-  // Try to inline PFP (works even if the host blocks hotlinking)
+  // Inline the PFP to avoid hotlink issues
   let pfpSrc = defaultPfp;
   if (pfpParam) {
     const inlined = await fetchAsDataUrl(pfpParam, 2000);
@@ -64,8 +64,10 @@ export async function GET(req: Request) {
             fontFamily: 'Inter, system-ui, Arial',
           }}
         >
+          {/* Spacer */}
           <div style={{ width: 1, height: 140, display: 'flex' }} />
 
+          {/* Avatar with ring */}
           <div
             style={{
               width: 220,
@@ -76,6 +78,7 @@ export async function GET(req: Request) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              boxShadow: '0 18px 40px rgba(0,0,0,0.35)',
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -87,20 +90,37 @@ export async function GET(req: Request) {
             />
           </div>
 
+          {/* Rank badge (replaces old gradient block) */}
           <div
             style={{
               marginTop: 28,
-              fontSize: 80,
-              fontWeight: 800,
+              width: 220,
+              height: 120,
+              borderRadius: 16,
               background: 'linear-gradient(90deg,#00E0FF,#8B5CF6,#00FF88)',
-              WebkitBackgroundClip: 'text',
-              color: 'transparent',
               display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 12px 30px rgba(0,0,0,0.25)',
             }}
           >
-            {`Rank #${rank}`}
+            <div
+              style={{
+                padding: '10px 20px',
+                borderRadius: 999,
+                background: 'rgba(0,0,0,0.55)',
+                color: '#e5e7eb',
+                fontWeight: 800,
+                fontSize: 40,
+                letterSpacing: 0.5,
+                display: 'flex',
+              }}
+            >
+              {`Rank #${rank}`}
+            </div>
           </div>
 
+          {/* Username */}
           <div
             style={{
               marginTop: 12,
@@ -113,6 +133,7 @@ export async function GET(req: Request) {
             {username}
           </div>
 
+          {/* Stats + progress */}
           <div
             style={{
               marginTop: 90,
@@ -121,6 +142,7 @@ export async function GET(req: Request) {
               flexDirection: 'column',
             }}
           >
+            {/* Top row */}
             <div
               style={{
                 display: 'flex',
@@ -151,6 +173,7 @@ export async function GET(req: Request) {
               </div>
             </div>
 
+            {/* Progress bar */}
             <div
               style={{
                 width: '100%',
@@ -164,8 +187,7 @@ export async function GET(req: Request) {
               <div
                 style={{
                   width: `${
-                    Math.max(0, Math.min(1, xpCurrent / Math.max(1, xpNext))) *
-                    100
+                    Math.max(0, Math.min(1, xpCurrent / Math.max(1, xpNext))) * 100
                   }%`,
                   height: '100%',
                   background: 'linear-gradient(90deg,#00E0FF,#8B5CF6,#00FF88)',
@@ -206,8 +228,7 @@ export async function GET(req: Request) {
         width: 1200,
         height: 800,
         headers: {
-          'Cache-Control':
-            'public, no-cache, no-store, must-revalidate, max-age=0',
+          'Cache-Control': 'public, no-cache, no-store, must-revalidate, max-age=0',
         },
       }
     );
