@@ -44,7 +44,6 @@ async function fetchAsDataUrl(
     return res;
   };
 
-  // primary
   const res = await tryFetch(target);
   if (res && res.ok) {
     const ct = res.headers.get('content-type') || '';
@@ -55,7 +54,6 @@ async function fetchAsDataUrl(
     }
   }
 
-  // fallback
   const res2 = await tryFetch(fallbackUrl);
   if (res2 && res2.ok) {
     const ct2 = res2.headers.get('content-type') || 'image/png';
@@ -66,7 +64,7 @@ async function fetchAsDataUrl(
     }
   }
 
-  // last resort: transparent 1x1 PNG data URL
+  // 1x1 transparent PNG
   return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
 }
 
@@ -97,8 +95,8 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
 
-    const safeMode = searchParams.get('safe') === '1';
-    if (safeMode) {
+    // Force a non-cached minimal render if requested
+    if (searchParams.get('safe') === '1') {
       return renderSafe('FitLocker');
     }
 
@@ -111,7 +109,7 @@ export async function GET(req: Request) {
 
     const pfpDataUrl = await fetchAsDataUrl(pfpParam, DEFAULT_PFP_URL);
 
-    // Stable progress bar sizing (avoid % width to prevent Satori issues)
+    // Stable progress bar sizing (avoid % widths)
     const barWidth = 1000;
     const progress = Math.max(0, Math.min(1, xpNext > 0 ? xpCurrent / xpNext : 0));
     const fillWidth = Math.max(0, Math.min(barWidth, Math.round(barWidth * progress)));
@@ -129,7 +127,7 @@ export async function GET(req: Request) {
           overflow: 'hidden',
         }}
       >
-        {/* Simple linear overlay to avoid fully black background */}
+        {/* Simple linear overlay (no external background image) */}
         <div
           style={{
             position: 'absolute',
@@ -220,10 +218,11 @@ export async function GET(req: Request) {
       </div>
     );
 
+    // Important: disable caching until we confirm non-zero bytes from Vercel
     return new ImageResponse(img, {
       width: WIDTH,
       height: HEIGHT,
-      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60' },
+      headers: { 'Cache-Control': 'no-store' },
     });
   } catch {
     return renderSafe('Unable to generate image');
