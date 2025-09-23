@@ -1,5 +1,5 @@
-// apps/miniapp-img/app/api/leaderboard/route.tsx
 export const runtime = 'edge';
+
 import { ImageResponse } from 'next/og';
 
 const WIDTH = 1200;
@@ -11,26 +11,46 @@ const DEFAULT_RANK = 999;
 const DEFAULT_XP_CURRENT = 0;
 const DEFAULT_XP_NEXT = 500;
 
-const DEFAULT_PFP_URL = 'https://img.fitlocker.io/CheckInPFP.png';
-const DEFAULT_BG_URL = 'https://img.fitlocker.io/CheckInBKG.png';
+const DEFAULT_PFP_URL = 'https://img.fitlocker.io/images/wc.png';
+const DEFAULT_BG_URL = 'https://img.fitlocker.io/images/CheckInBKG.png';
 
-async function fetchAsDataUrl(url: string | null | undefined, fallbackUrl: string): Promise<string> {
+function parseIntSafe(v: string | null, dflt: number): number {
+  const n = v ? parseInt(v, 10) : NaN;
+  return Number.isFinite(n) && n >= 0 ? n : dflt;
+}
+
+async function fetchAsDataUrl(
+  url: string | null | undefined,
+  fallbackUrl: string
+): Promise<string> {
+  const target = url && url.trim().length > 0 ? url : fallbackUrl;
   try {
-    const target = url && url.trim().length > 0 ? url : fallbackUrl;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 2500);
-    const res = await fetch(target, { headers: { Accept: 'image/*' }, cache: 'no-store', signal: controller.signal });
+    const res = await fetch(target, {
+      headers: { Accept: 'image/*' },
+      cache: 'no-store',
+      signal: controller.signal,
+    });
     clearTimeout(timeout);
 
-    const okRes = res.ok ? res : await fetch(fallbackUrl, { headers: { Accept: 'image/*' }, cache: 'no-store' });
-    const buf = await okRes.arrayBuffer();
+    const ok = res.ok && (res.headers.get('content-type') || '').startsWith('image/');
+    if (!ok) {
+      const res2 = await fetch(fallbackUrl, { headers: { Accept: 'image/*' }, cache: 'no-store' });
+      const buf2 = await res2.arrayBuffer();
+      const mime2 = res2.headers.get('content-type') || 'image/png';
+      return `data:${mime2};base64,${Buffer.from(buf2).toString('base64')}`;
+    }
+
+    const buf = await res.arrayBuffer();
     if (!buf || buf.byteLength === 0) {
       const res2 = await fetch(fallbackUrl, { headers: { Accept: 'image/*' }, cache: 'no-store' });
       const buf2 = await res2.arrayBuffer();
       const mime2 = res2.headers.get('content-type') || 'image/png';
       return `data:${mime2};base64,${Buffer.from(buf2).toString('base64')}`;
     }
-    const mime = okRes.headers.get('content-type') || 'image/png';
+
+    const mime = res.headers.get('content-type') || 'image/png';
     return `data:${mime};base64,${Buffer.from(buf).toString('base64')}`;
   } catch {
     const res = await fetch(fallbackUrl, { headers: { Accept: 'image/*' }, cache: 'no-store' });
@@ -40,49 +60,141 @@ async function fetchAsDataUrl(url: string | null | undefined, fallbackUrl: strin
   }
 }
 
-function parseIntSafe(v: string | null, d: number): number {
-  const n = v ? parseInt(v, 10) : NaN;
-  return Number.isFinite(n) && n > 0 ? n : d;
-}
-
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
+
     const username = searchParams.get('username') || DEFAULT_USERNAME;
     const level = parseIntSafe(searchParams.get('level'), DEFAULT_LEVEL);
     const rank = parseIntSafe(searchParams.get('rank'), DEFAULT_RANK);
     const xpCurrent = parseIntSafe(searchParams.get('xpCurrent'), DEFAULT_XP_CURRENT);
     const xpNext = parseIntSafe(searchParams.get('xpNext'), DEFAULT_XP_NEXT);
 
-    const pfpDataUrl = await fetchAsDataUrl(searchParams.get('pfp'), DEFAULT_PFP_URL);
-    const bgDataUrl = await fetchAsDataUrl(searchParams.get('background'), DEFAULT_BG_URL);
+    const pfpParam = searchParams.get('pfp');
+    const bgParam = searchParams.get('background');
+
+    const pfpDataUrl = await fetchAsDataUrl(pfpParam, DEFAULT_PFP_URL);
+
+    let bgDataUrl: string | null = null;
+    try {
+      const bgTarget = bgParam && bgParam.trim().length > 0 ? bgParam : DEFAULT_BG_URL;
+      const res = await fetch(bgTarget, { headers: { Accept: 'image/*' }, cache: 'no-store' });
+      const isImage = (res.headers.get('content-type') || '').startsWith('image/');
+      if (res.ok && isImage) {
+        const buf = await res.arrayBuffer();
+        if (buf && buf.byteLength > 0) {
+          const mime = res.headers.get('content-type') || 'image/png';
+          bgDataUrl = `data:${mime};base64,${Buffer.from(buf).toString('base64')}`;
+        }
+      }
+    } catch {
+      bgDataUrl = null;
+    }
 
     const progress = Math.max(0, Math.min(1, xpNext > 0 ? xpCurrent / xpNext : 0));
     const progressPct = Math.round(progress * 100);
 
     const img = (
-      <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', flexDirection: 'column', backgroundColor: '#0b0b10', position: 'relative', overflow: 'hidden' }}>
-        <img src={bgDataUrl} alt="" width={WIDTH} height={HEIGHT} style={{ position: 'absolute', inset: 0, objectFit: 'cover', opacity: 0.9 }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 60% at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 100%)' }} />
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', padding: 48, gap: 28, color: 'white' }}>
+      <div
+        style={{
+          width: WIDTH,
+          height: HEIGHT,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#0b0b10',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {bgDataUrl ? (
+          <img
+            src={bgDataUrl}
+            alt=""
+            width={WIDTH}
+            height={HEIGHT}
+            style={{ position: 'absolute', inset: 0, objectFit: 'cover', opacity: 0.9 }}
+          />
+        ) : null}
+
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'radial-gradient(60% 60% at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 100%)',
+          }}
+        />
+
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: 48,
+            gap: 28,
+            color: 'white',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            <img src={pfpDataUrl} alt="" width={120} height={120} style={{ borderRadius: 9999, border: '4px solid rgba(255,255,255,0.15)', objectFit: 'cover', background: '#111' }} />
+            <img
+              src={pfpDataUrl}
+              alt=""
+              width={120}
+              height={120}
+              style={{
+                borderRadius: 9999,
+                border: '4px solid rgba(255,255,255,0.15)',
+                objectFit: 'cover',
+                background: '#111',
+              }}
+            />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontSize: 48, fontWeight: 700 }}>{username}</div>
               <div style={{ fontSize: 28, opacity: 0.9 }}>Level {level}</div>
             </div>
+
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ padding: '10px 18px', borderRadius: 9999, background: 'linear-gradient(90deg, #6EE7F9 0%, #A78BFA 50%, #34D399 100%)', color: '#0b0b10', fontWeight: 800, fontSize: 28 }}>
+              <div
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 9999,
+                  background:
+                    'linear-gradient(90deg, #6EE7F9 0%, #A78BFA 50%, #34D399 100%)',
+                  color: '#0b0b10',
+                  fontWeight: 800,
+                  fontSize: 28,
+                }}
+              >
                 Rank #{rank}
               </div>
             </div>
           </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-            <div style={{ fontSize: 26, opacity: 0.9 }}>XP {xpCurrent} / {xpNext} ({progressPct}%)</div>
-            <div style={{ width: '100%', height: 28, borderRadius: 9999, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
-              <div style={{ width: `${progressPct}%`, height: '100%', background: 'linear-gradient(90deg, #60A5FA 0%, #A78BFA 50%, #34D399 100%)' }} />
+            <div style={{ fontSize: 26, opacity: 0.9 }}>
+              XP {xpCurrent} / {xpNext} ({progressPct}%)
+            </div>
+            <div
+              style={{
+                width: '100%',
+                height: 28,
+                borderRadius: 9999,
+                background: 'rgba(255,255,255,0.12)',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${progressPct}%`,
+                  height: '100%',
+                  background:
+                    'linear-gradient(90deg, #60A5FA 0%, #A78BFA 50%, #34D399 100%)',
+                }}
+              />
             </div>
           </div>
+
           <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ fontSize: 24, opacity: 0.85 }}>fitlocker.io</div>
             <div style={{ fontSize: 24, opacity: 0.85 }}>#FitLocker #Base #Fitness</div>
@@ -94,14 +206,32 @@ export async function GET(req: Request) {
     return new ImageResponse(img, {
       width: WIDTH,
       height: HEIGHT,
-      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60' },
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
+      },
     });
   } catch {
     const fallback = (
-      <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b0b10', color: 'white', fontSize: 48, fontWeight: 700 }}>
+      <div
+        style={{
+          width: WIDTH,
+          height: HEIGHT,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#0b0b10',
+          color: 'white',
+          fontSize: 48,
+          fontWeight: 700,
+        }}
+      >
         Unable to generate image
       </div>
     );
-    return new ImageResponse(fallback, { width: WIDTH, height: HEIGHT, headers: { 'Cache-Control': 'no-store' } });
+    return new ImageResponse(fallback, {
+      width: WIDTH,
+      height: HEIGHT,
+      headers: { 'Cache-Control': 'no-store' },
+    });
   }
 }
