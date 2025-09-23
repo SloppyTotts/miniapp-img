@@ -4,6 +4,7 @@ export const runtime = 'edge';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+
   const username = searchParams.get('username') || 'Athlete';
   const level = searchParams.get('level') || '1';
   const xpCurrent = Number(searchParams.get('xpCurrent') || '0');
@@ -22,6 +23,7 @@ export async function GET(req: Request) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            justifyContent: 'flex-start',
             background: background
               ? `url(${background}) center/cover no-repeat`
               : 'linear-gradient(135deg,#0e0f12,#0b0c0f)',
@@ -29,7 +31,10 @@ export async function GET(req: Request) {
             fontFamily: 'Inter, system-ui, Arial',
           }}
         >
-          <div style={{ height: 160 }} />
+          {/* top spacer */}
+          <div style={{ width: 1, height: 160, display: 'flex' }} />
+
+          {/* avatar */}
           {pfp ? (
             <div
               style={{
@@ -43,6 +48,7 @@ export async function GET(req: Request) {
                 justifyContent: 'center',
               }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={pfp}
                 width={204}
@@ -51,6 +57,8 @@ export async function GET(req: Request) {
               />
             </div>
           ) : null}
+
+          {/* rank */}
           <div
             style={{
               marginTop: 40,
@@ -59,11 +67,22 @@ export async function GET(req: Request) {
               background: 'linear-gradient(90deg,#00E0FF,#8B5CF6,#00FF88)',
               WebkitBackgroundClip: 'text',
               color: 'transparent',
+              display: 'flex',
             }}
           >
             {`Rank #${rank}`}
           </div>
-          <div style={{ marginTop: 140, width: 1080 }}>
+
+          {/* stats + bar */}
+          <div
+            style={{
+              marginTop: 140,
+              width: 1080,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            {/* header row */}
             <div
               style={{
                 display: 'flex',
@@ -83,13 +102,18 @@ export async function GET(req: Request) {
                     color: '#22c55e',
                     fontSize: 18,
                     fontWeight: 700,
+                    display: 'flex',
                   }}
                 >
                   Early Access
                 </span>
               </div>
-              <div>{`${xpCurrent.toLocaleString()} / ${xpNext.toLocaleString()} XP`}</div>
+              <div style={{ display: 'flex' }}>
+                {`${xpCurrent.toLocaleString()} / ${xpNext.toLocaleString()} XP`}
+              </div>
             </div>
+
+            {/* progress track */}
             <div
               style={{
                 width: '100%',
@@ -97,15 +121,18 @@ export async function GET(req: Request) {
                 background: '#1f2937',
                 borderRadius: 14,
                 overflow: 'hidden',
+                display: 'flex',
               }}
             >
               <div
                 style={{
                   width: `${
-                    Math.max(0, Math.min(1, xpCurrent / Math.max(1, xpNext))) * 100
+                    Math.max(0, Math.min(1, xpCurrent / Math.max(1, xpNext))) *
+                    100
                   }%`,
                   height: '100%',
                   background: 'linear-gradient(90deg,#00E0FF,#8B5CF6,#00FF88)',
+                  display: 'flex',
                 }}
               />
             </div>
