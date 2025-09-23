@@ -26,6 +26,16 @@ async function fetchAsDataUrl(url: string, timeoutMs = 2000): Promise<string | n
   }
 }
 
+function resolveBackground(param?: string) {
+  const defaultBg = 'https://fitlocker-backend.onrender.com/api/embed/public/templates/CheckInBKG.png';
+  if (!param) return defaultBg;
+  if (param.startsWith('template:')) {
+    const key = param.split(':')[1];
+    if (key === 'checkin') return defaultBg;
+  }
+  return param; // treat as absolute URL
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
@@ -34,7 +44,8 @@ export async function GET(req: Request) {
   const xpCurrent = Number(searchParams.get('xpCurrent') || '0');
   const xpNext = Number(searchParams.get('xpNext') || '500');
   const rank = searchParams.get('rank') || '—';
-  const background = searchParams.get('background') || '';
+
+  const bgSrc = resolveBackground(searchParams.get('background') || undefined);
 
   const pfpParam = searchParams.get('pfp') || '';
   const defaultPfp = 'https://img.fitlocker.io/images/default-pfp.png';
@@ -57,9 +68,7 @@ export async function GET(req: Request) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            background: background
-              ? `url(${background}) center/cover no-repeat`
-              : 'linear-gradient(135deg,#0e0f12,#0b0c0f)',
+            background: `url(${bgSrc}) center/cover no-repeat`,
             color: '#e5e7eb',
             fontFamily: 'Inter, system-ui, Arial',
           }}
@@ -90,7 +99,7 @@ export async function GET(req: Request) {
             />
           </div>
 
-          {/* Rank badge (replaces old gradient block) */}
+          {/* Rank badge */}
           <div
             style={{
               marginTop: 28,
