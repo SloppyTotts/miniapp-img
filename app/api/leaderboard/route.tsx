@@ -12,7 +12,6 @@ const DEFAULT_XP_CURRENT = 0;
 const DEFAULT_XP_NEXT = 500;
 
 const DEFAULT_PFP_URL = 'https://img.fitlocker.io/images/wc.png';
-const DEFAULT_BG_URL = 'https://img.fitlocker.io/images/CheckInBKG.png';
 
 function parseIntSafe(v: string | null, dflt: number): number {
   const n = v ? parseInt(v, 10) : NaN;
@@ -27,7 +26,10 @@ function arrayBufferToBase64(buf: ArrayBuffer): string {
   return btoa(binary);
 }
 
-async function fetchAsDataUrl(url: string | null | undefined, fallbackUrl: string): Promise<string> {
+async function fetchAsDataUrl(
+  url: string | null | undefined,
+  fallbackUrl: string
+): Promise<string> {
   const target = url && url.trim().length > 0 ? url : fallbackUrl;
 
   const tryFetch = async (u: string) => {
@@ -42,6 +44,7 @@ async function fetchAsDataUrl(url: string | null | undefined, fallbackUrl: strin
     return res;
   };
 
+  // primary
   const res = await tryFetch(target);
   if (res && res.ok) {
     const ct = res.headers.get('content-type') || '';
@@ -52,6 +55,7 @@ async function fetchAsDataUrl(url: string | null | undefined, fallbackUrl: strin
     }
   }
 
+  // fallback
   const res2 = await tryFetch(fallbackUrl);
   if (res2 && res2.ok) {
     const ct2 = res2.headers.get('content-type') || 'image/png';
@@ -62,13 +66,13 @@ async function fetchAsDataUrl(url: string | null | undefined, fallbackUrl: strin
     }
   }
 
-  // 1x1 transparent PNG
+  // last resort: transparent 1x1 PNG data URL
   return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
 }
 
 export async function GET(req: Request) {
-  // Safe fallback if streaming throws later: return a simple image
-  const renderSafeFallback = () =>
+  // Ultra-minimal safe mode image (no <img>, no external fetches)
+  const renderSafe = (text = 'FitLocker') =>
     new ImageResponse(
       (
         <div
@@ -84,18 +88,19 @@ export async function GET(req: Request) {
             fontWeight: 700,
           }}
         >
-          Unable to generate image
+          {text}
         </div>
       ),
-      {
-        width: WIDTH,
-        height: HEIGHT,
-        headers: { 'Cache-Control': 'no-store' },
-      }
+      { width: WIDTH, height: HEIGHT, headers: { 'Cache-Control': 'no-store' } }
     );
 
   try {
     const { searchParams } = new URL(req.url);
+
+    const safeMode = searchParams.get('safe') === '1';
+    if (safeMode) {
+      return renderSafe('FitLocker');
+    }
 
     const username = searchParams.get('username') || DEFAULT_USERNAME;
     const level = parseIntSafe(searchParams.get('level'), DEFAULT_LEVEL);
@@ -103,37 +108,15 @@ export async function GET(req: Request) {
     const xpCurrent = parseIntSafe(searchParams.get('xpCurrent'), DEFAULT_XP_CURRENT);
     const xpNext = parseIntSafe(searchParams.get('xpNext'), DEFAULT_XP_NEXT);
     const pfpParam = searchParams.get('pfp');
-    const bgParam = searchParams.get('background');
-    const safeMode = searchParams.get('safe') === '1';
 
-    // Precompute progress
+    const pfpDataUrl = await fetchAsDataUrl(pfpParam, DEFAULT_PFP_URL);
+
+    // Stable progress bar sizing (avoid % width to prevent Satori issues)
+    const barWidth = 1000;
     const progress = Math.max(0, Math.min(1, xpNext > 0 ? xpCurrent / xpNext : 0));
+    const fillWidth = Math.max(0, Math.min(barWidth, Math.round(barWidth * progress)));
     const progressPct = Math.round(progress * 100);
 
-    // In safe mode, skip all image fetches and <img> tags
-    let pfpDataUrl: string | null = null;
-    let bgDataUrl: string | null = null;
-
-    if (!safeMode) {
-      // PFP
-      pfpDataUrl = await fetchAsDataUrl(pfpParam, DEFAULT_PFP_URL);
-
-      // Background (optional)
-      try {
-        const bgTarget = bgParam && bgParam.trim().length > 0 ? bgParam : DEFAULT_BG_URL;
-        const res = await fetch(bgTarget, { headers: { Accept: 'image/*' }, cache: 'no-store' });
-        const isImage = (res.headers.get('content-type') || '').startsWith('image/');
-        const buf = isImage ? await res.arrayBuffer() : null;
-        if (res.ok && buf && buf.byteLength > 0) {
-          const mime = res.headers.get('content-type') || 'image/png';
-          bgDataUrl = `data:${mime};base64,${arrayBufferToBase64(buf)}`;
-        }
-      } catch {
-        bgDataUrl = null;
-      }
-    }
-
-    // Render with only Satori-safe styles
     const img = (
       <div
         style={{
@@ -146,25 +129,7 @@ export async function GET(req: Request) {
           overflow: 'hidden',
         }}
       >
-        {bgDataUrl ? (
-          <img
-            src={bgDataUrl}
-            alt=""
-            width={WIDTH}
-            height={HEIGHT}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              objectFit: 'cover',
-              opacity: 0.9,
-            }}
-          />
-        ) : null}
-
-        {/* Simple linear overlay (avoid radial-gradient) */}
+        {/* Simple linear overlay to avoid fully black background */}
         <div
           style={{
             position: 'absolute',
@@ -172,8 +137,7 @@ export async function GET(req: Request) {
             left: 0,
             right: 0,
             bottom: 0,
-            background:
-              'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 100%)',
+            background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 100%)',
           }}
         />
 
@@ -188,31 +152,18 @@ export async function GET(req: Request) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            {!safeMode && pfpDataUrl ? (
-              <img
-                src={pfpDataUrl}
-                alt=""
-                width={120}
-                height={120}
-                style={{
-                  borderRadius: 9999,
-                  border: '4px solid rgba(255,255,255,0.15)',
-                  objectFit: 'cover',
-                  background: '#111',
-                }}
-              />
-            ) : (
-              // Minimal placeholder in safe mode
-              <div
-                style={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: 9999,
-                  background: '#222',
-                  border: '4px solid rgba(255,255,255,0.15)',
-                }}
-              />
-            )}
+            <img
+              src={pfpDataUrl}
+              alt=""
+              width={120}
+              height={120}
+              style={{
+                borderRadius: 9999,
+                border: '4px solid rgba(255,255,255,0.15)',
+                objectFit: 'cover',
+                background: '#111',
+              }}
+            />
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontSize: 48, fontWeight: 700 }}>{username}</div>
@@ -244,7 +195,7 @@ export async function GET(req: Request) {
             </div>
             <div
               style={{
-                width: '100%',
+                width: barWidth,
                 height: 28,
                 borderRadius: 9999,
                 background: 'rgba(255,255,255,0.12)',
@@ -253,7 +204,7 @@ export async function GET(req: Request) {
             >
               <div
                 style={{
-                  width: `${progressPct}%`,
+                  width: fillWidth,
                   height: '100%',
                   background: '#60A5FA',
                 }}
@@ -269,14 +220,12 @@ export async function GET(req: Request) {
       </div>
     );
 
-    // If streaming fails later due to Satori, caller will still see 200/0;
-    // so also provide an explicit safe mode endpoint to validate rendering.
     return new ImageResponse(img, {
       width: WIDTH,
       height: HEIGHT,
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60' },
     });
   } catch {
-    return renderSafeFallback();
+    return renderSafe('Unable to generate image');
   }
 }
