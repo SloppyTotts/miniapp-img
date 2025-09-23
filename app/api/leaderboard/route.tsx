@@ -4,8 +4,10 @@ export const revalidate = 0;
 
 import { ImageResponse } from 'next/og';
 
-const WIDTH = 1200;
-const HEIGHT = 630;
+const WIDTH = 1200;        // 3:2 recommended
+const HEIGHT = 800;        // 3:2 recommended
+const PADDING = 64;        // outer padding
+const CONTENT_WIDTH = WIDTH - PADDING * 2;
 
 const DEFAULT_USERNAME = 'Athlete';
 const DEFAULT_LEVEL = 1;
@@ -70,20 +72,19 @@ export async function GET(req: Request) {
     const xpNext = parseIntSafe(searchParams.get('xpNext'), DEFAULT_XP_NEXT);
     const pfpParam = searchParams.get('pfp') || '';
 
-    const barWidth = 1000;
+    const barWidth = CONTENT_WIDTH;
     const barHeight = 28;
     const progress = Math.max(0, Math.min(1, xpNext > 0 ? xpCurrent / xpNext : 0));
     const fillWidth = Math.round(barWidth * progress);
     const progressPct = Math.round(progress * 100);
 
-    // Try provided PFP, then default; otherwise null (placeholder)
     let pfpDataUrl: string | null = null;
     if (pfpParam) pfpDataUrl = await fetchAsDataUrlStrict(pfpParam);
     if (!pfpDataUrl) pfpDataUrl = await fetchAsDataUrlStrict(DEFAULT_PFP_URL);
 
     const img = (
       <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', flexDirection: 'column', backgroundColor: '#0b0b10' }}>
-        <div style={{ display: 'flex', paddingLeft: 48, paddingRight: 48, paddingTop: 48, paddingBottom: 0, color: '#fff', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: PADDING, paddingRight: PADDING, paddingTop: PADDING, gap: 28, color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
             {pfpDataUrl ? (
               <img
@@ -91,34 +92,30 @@ export async function GET(req: Request) {
                 alt=""
                 width={120}
                 height={120}
-                style={{
-                  borderRadius: 9999,
-                  border: '4px solid rgba(255,255,255,0.15)',
-                  background: '#111',
-                }}
+                style={{ borderRadius: 9999, border: '4px solid rgba(255,255,255,0.15)', background: '#111' }}
               />
             ) : (
               <div style={{ width: 120, height: 120, display: 'flex', borderRadius: 9999, background: '#222', border: '4px solid rgba(255,255,255,0.15)' }} />
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', fontSize: 48, fontWeight: 700 }}>{username}</div>
-              <div style={{ display: 'flex', fontSize: 28, opacity: 0.9 }}>Level {level}</div>
+              <div style={{ display: 'flex', fontSize: 56, fontWeight: 700 }}>{username}</div>
+              <div style={{ display: 'flex', fontSize: 30, opacity: 0.9 }}>Level {level}</div>
             </div>
 
             <div style={{ display: 'flex', marginLeft: 'auto' as any }}>
               <div
                 style={{
                   display: 'flex',
-                  paddingTop: 10,
-                  paddingBottom: 10,
-                  paddingLeft: 18,
-                  paddingRight: 18,
+                  paddingTop: 12,
+                  paddingBottom: 12,
+                  paddingLeft: 22,
+                  paddingRight: 22,
                   borderRadius: 9999,
                   background: '#A78BFA',
                   color: '#0b0b10',
                   fontWeight: 800,
-                  fontSize: 28,
+                  fontSize: 30,
                 }}
               >
                 Rank #{rank}
@@ -126,8 +123,8 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', fontSize: 26, opacity: 0.9 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', fontSize: 28, opacity: 0.9 }}>
               XP {xpCurrent} / {xpNext} ({progressPct}%)
             </div>
             <div style={{ display: 'flex', width: barWidth, height: barHeight, borderRadius: 9999, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
@@ -135,7 +132,7 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 18, width: CONTENT_WIDTH }}>
             <div style={{ display: 'flex', fontSize: 24, opacity: 0.85 }}>fitlocker.io</div>
             <div style={{ display: 'flex', fontSize: 24, opacity: 0.85 }}>#FitLocker #Base #Fitness</div>
           </div>
