@@ -11,6 +11,7 @@ const CONTENT_WIDTH = WIDTH - PADDING * 2;
 
 const DEFAULT_USERNAME = 'Athlete';
 const DEFAULT_LEVEL = 1;
+const DEFAULT_RANK = 999;
 const DEFAULT_XP_CURRENT = 0;
 const DEFAULT_XP_NEXT = 500;
 
@@ -67,6 +68,7 @@ export async function GET(req: Request) {
 
     const username = searchParams.get('username') || DEFAULT_USERNAME;
     const level = parseIntSafe(searchParams.get('level'), DEFAULT_LEVEL);
+    const rank = parseIntSafe(searchParams.get('rank'), DEFAULT_RANK);
     const xpCurrent = parseIntSafe(searchParams.get('xpCurrent'), DEFAULT_XP_CURRENT);
     const xpNext = parseIntSafe(searchParams.get('xpNext'), DEFAULT_XP_NEXT);
     const pfpParam = searchParams.get('pfp') || '';
@@ -94,19 +96,20 @@ export async function GET(req: Request) {
         )}
 
         {/* Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 160, gap: 28, color: '#fff', position: 'relative', zIndex: 1 }}>
-          {/* PFP and username slightly larger and lower */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 180, gap: 26, color: '#fff', position: 'relative', zIndex: 1 }}>
+          {/* PFP + username + rank */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
             {pfpDataUrl ? (
-              <img src={pfpDataUrl} alt="" width={160} height={160} style={{ borderRadius: 9999, border: '4px solid rgba(255,255,255,0.15)', background: '#111' }} />
+              <img src={pfpDataUrl} alt="" width={170} height={170} style={{ borderRadius: 9999, border: '4px solid rgba(255,255,255,0.15)', background: '#111' }} />
             ) : (
-              <div style={{ width: 160, height: 160, display: 'flex', borderRadius: 9999, background: '#222', border: '4px solid rgba(255,255,255,0.15)' }} />
+              <div style={{ width: 170, height: 170, display: 'flex', borderRadius: 9999, background: '#222', border: '4px solid rgba(255,255,255,0.15)' }} />
             )}
             <div style={{ display: 'flex', fontSize: 52, fontWeight: 700 }}>@{username}</div>
+            <div style={{ display: 'flex', fontSize: 26, opacity: 0.9 }}>Rank #{rank}</div>
           </div>
 
-          {/* Stats block moved down a bit */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 24, width: CONTENT_WIDTH }}>
+          {/* Stats block moved further down */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 56, width: CONTENT_WIDTH }}>
             {/* Row: Level left, XP right */}
             <div style={{ display: 'flex', alignItems: 'center', width: CONTENT_WIDTH }}>
               <div
@@ -125,7 +128,6 @@ export async function GET(req: Request) {
               >
                 Level {level}
               </div>
-
               <div style={{ display: 'flex', marginLeft: 'auto' as any, fontSize: 28, opacity: 0.95 }}>
                 {xpCurrent}/{xpNext} XP
               </div>
