@@ -4,14 +4,13 @@ export const revalidate = 0;
 
 import { ImageResponse } from 'next/og';
 
-const WIDTH = 1200;        // 3:2 recommended
-const HEIGHT = 800;        // 3:2 recommended
-const PADDING = 64;        // outer padding
+const WIDTH = 1200;
+const HEIGHT = 800;
+const PADDING = 64;
 const CONTENT_WIDTH = WIDTH - PADDING * 2;
 
 const DEFAULT_USERNAME = 'Athlete';
 const DEFAULT_LEVEL = 1;
-const DEFAULT_RANK = 999;
 const DEFAULT_XP_CURRENT = 0;
 const DEFAULT_XP_NEXT = 500;
 
@@ -68,7 +67,6 @@ export async function GET(req: Request) {
 
     const username = searchParams.get('username') || DEFAULT_USERNAME;
     const level = parseIntSafe(searchParams.get('level'), DEFAULT_LEVEL);
-    const rank = parseIntSafe(searchParams.get('rank'), DEFAULT_RANK);
     const xpCurrent = parseIntSafe(searchParams.get('xpCurrent'), DEFAULT_XP_CURRENT);
     const xpNext = parseIntSafe(searchParams.get('xpNext'), DEFAULT_XP_NEXT);
     const pfpParam = searchParams.get('pfp') || '';
@@ -78,7 +76,6 @@ export async function GET(req: Request) {
     const barHeight = 28;
     const progress = Math.max(0, Math.min(1, xpNext > 0 ? xpCurrent / xpNext : 0));
     const fillWidth = Math.round(barWidth * progress);
-    const progressPct = Math.round(progress * 100);
 
     let pfpDataUrl: string | null = null;
     if (pfpParam) pfpDataUrl = await fetchAsDataUrlStrict(pfpParam);
@@ -90,72 +87,53 @@ export async function GET(req: Request) {
 
     const img = (
       <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-        {/* Background Image */}
         {bgDataUrl ? (
-          <img
-            src={bgDataUrl}
-            alt=""
-            width={WIDTH}
-            height={HEIGHT}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              objectFit: 'cover',
-            }}
-          />
+          <img src={bgDataUrl} alt="" width={WIDTH} height={HEIGHT} style={{ position: 'absolute', top: 0, left: 0, objectFit: 'cover' }} />
         ) : (
           <div style={{ width: WIDTH, height: HEIGHT, background: '#0b0b10' }} />
         )}
-        
-        {/* Content Overlay */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 120, gap: 32, color: '#fff', position: 'relative', zIndex: 1 }}>
-          {/* PFP at top center */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-            {pfpDataUrl ? (
-              <img
-                src={pfpDataUrl}
-                alt=""
-                width={140}
-                height={140}
-                style={{ borderRadius: 9999, border: '4px solid rgba(255,255,255,0.15)', background: '#111' }}
-              />
-            ) : (
-              <div style={{ width: 140, height: 140, display: 'flex', borderRadius: 9999, background: '#222', border: '4px solid rgba(255,255,255,0.15)' }} />
-            )}
 
-            {/* Username below PFP */}
-            <div style={{ display: 'flex', fontSize: 48, fontWeight: 700 }}>@{username}</div>
-            
-            {/* Level button below username */}
-            <div
-              style={{
-                display: 'flex',
-                paddingTop: 12,
-                paddingBottom: 12,
-                paddingLeft: 24,
-                paddingRight: 24,
-                borderRadius: 8,
-                background: '#60A5FA',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: 24,
-              }}
-            >
-              Level {level}
-            </div>
+        {/* Content */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 160, gap: 28, color: '#fff', position: 'relative', zIndex: 1 }}>
+          {/* PFP and username slightly larger and lower */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+            {pfpDataUrl ? (
+              <img src={pfpDataUrl} alt="" width={160} height={160} style={{ borderRadius: 9999, border: '4px solid rgba(255,255,255,0.15)', background: '#111' }} />
+            ) : (
+              <div style={{ width: 160, height: 160, display: 'flex', borderRadius: 9999, background: '#222', border: '4px solid rgba(255,255,255,0.15)' }} />
+            )}
+            <div style={{ display: 'flex', fontSize: 52, fontWeight: 700 }}>@{username}</div>
           </div>
 
-          {/* XP Progress at bottom */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginTop: 'auto', paddingBottom: 80 }}>
-            <div style={{ display: 'flex', fontSize: 24, opacity: 0.9 }}>
-              {xpCurrent}/{xpNext} XP
+          {/* Stats block moved down a bit */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 24, width: CONTENT_WIDTH }}>
+            {/* Row: Level left, XP right */}
+            <div style={{ display: 'flex', alignItems: 'center', width: CONTENT_WIDTH }}>
+              <div
+                style={{
+                  display: 'flex',
+                  paddingTop: 12,
+                  paddingBottom: 12,
+                  paddingLeft: 22,
+                  paddingRight: 22,
+                  borderRadius: 10,
+                  background: '#1D4ED8',
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: 26,
+                }}
+              >
+                Level {level}
+              </div>
+
+              <div style={{ display: 'flex', marginLeft: 'auto' as any, fontSize: 28, opacity: 0.95 }}>
+                {xpCurrent}/{xpNext} XP
+              </div>
             </div>
+
+            {/* Progress bar */}
             <div style={{ display: 'flex', width: barWidth, height: barHeight, borderRadius: 9999, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', width: fillWidth, height: barHeight, background: 'linear-gradient(90deg, #60A5FA 0%, #3B82F6 100%)' }} />
-            </div>
-            <div style={{ display: 'flex', fontSize: 20, opacity: 0.9 }}>
-              {progressPct}%
+              <div style={{ display: 'flex', width: fillWidth, height: barHeight, background: 'linear-gradient(90deg, #60A5FA 0%, #22D3EE 50%, #3B82F6 100%)' }} />
             </div>
           </div>
         </div>
