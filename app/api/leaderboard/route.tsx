@@ -20,78 +20,42 @@ function parseIntSafe(v: string | null, dflt: number): number {
   return Number.isFinite(n) && n >= 0 ? n : dflt;
 }
 
-function arrayBufferToBase64(buf: ArrayBuffer): string {
-  let binary = '';
-  const bytes = new Uint8Array(buf);
-  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
+// ArrayBuffer -> base64 (Edge-safe)
+function ab64(buf: ArrayBuffer): string {
+  let s = '';
+  const b = new Uint8Array(buf);
+  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s);
 }
 
-async function fetchAsDataUrl(url: string | null | undefined, fallbackUrl: string): Promise<string> {
-  const target = url && url.trim() ? url : fallbackUrl;
-
-  const tryFetch = async (u: string) => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2500);
-    const res = await fetch(u, {
-      headers: { Accept: 'image/*' },
-      cache: 'no-store',
-      signal: controller.signal,
-    }).catch(() => null as unknown as Response);
-    clearTimeout(timeout);
-    return res;
-  };
-
-  const res = await tryFetch(target);
-  if (res && res.ok) {
+// Fetch image and inline as data URL with short timeout + strict checks
+async function fetchAsDataUrl(u: string): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2000);
+    const res = await fetch(u, { headers: { Accept: 'image/*' }, cache: 'no-store', signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) return null;
     const ct = res.headers.get('content-type') || '';
-    const buf = await res.arrayBuffer().catch(() => null);
-    if (ct.startsWith('image/') && buf && buf.byteLength > 0) {
-      return `data:${ct};base64,${arrayBufferToBase64(buf)}`;
-    }
+    if (!ct.startsWith('image/')) return null;
+    const buf = await res.arrayBuffer();
+    if (!buf || buf.byteLength === 0) return null;
+    return `data:${ct};base64,${ab64(buf)}`;
+  } catch {
+    return null;
   }
-
-  const res2 = await tryFetch(fallbackUrl);
-  if (res2 && res2.ok) {
-    const ct2 = res2.headers.get('content-type') || 'image/png';
-    const buf2 = await res2.arrayBuffer().catch(() => null);
-    if (ct2.startsWith('image/') && buf2 && buf2.byteLength > 0) {
-      return `data:${ct2};base64,${arrayBufferToBase64(buf2)}`;
-    }
-  }
-
-  return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
 }
 
 export async function GET(req: Request) {
-  const renderSafe = (text = 'FitLocker') =>
+  const safe = (txt: string) =>
     new ImageResponse(
-      (
-        <div
-          style={{
-            width: WIDTH,
-            height: HEIGHT,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#0b0b10',
-            color: 'white',
-            fontSize: 48,
-            fontWeight: 700,
-          }}
-        >
-          {text}
-        </div>
-      ),
+      <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b0b10', color: '#fff', fontSize: 48, fontWeight: 700 }}>{txt}</div>,
       { width: WIDTH, height: HEIGHT, headers: { 'Cache-Control': 'no-store' } }
     );
 
   try {
     const { searchParams } = new URL(req.url);
-
-    if (searchParams.get('safe') === '1') {
-      return renderSafe('FitLocker');
-    }
+    if (searchParams.get('safe') === '1') return safe('FitLocker');
 
     const username = searchParams.get('username') || DEFAULT_USERNAME;
     const level = parseIntSafe(searchParams.get('level'), DEFAULT_LEVEL);
@@ -99,79 +63,45 @@ export async function GET(req: Request) {
     const xpCurrent = parseIntSafe(searchParams.get('xpCurrent'), DEFAULT_XP_CURRENT);
     const xpNext = parseIntSafe(searchParams.get('xpNext'), DEFAULT_XP_NEXT);
     const pfpParam = searchParams.get('pfp');
+    const noPfp = searchParams.get('noPfp') === '1';
 
-    const pfpDataUrl = await fetchAsDataUrl(pfpParam, DEFAULT_PFP_URL);
-
+    // Progress bar sizing (px, not %)
     const barWidth = 1000;
     const progress = Math.max(0, Math.min(1, xpNext > 0 ? xpCurrent / xpNext : 0));
-    const fillWidth = Math.max(0, Math.min(barWidth, Math.round(barWidth * progress)));
+    const fillWidth = Math.round(barWidth * progress);
     const progressPct = Math.round(progress * 100);
 
+    // Inline avatar unless skipped
+    let pfpDataUrl: string | null = null;
+    if (!noPfp) {
+      const src = pfpParam && pfpParam.trim() ? pfpParam : DEFAULT_PFP_URL;
+      pfpDataUrl = await fetchAsDataUrl(src);
+    }
+
     const img = (
-      <div
-        style={{
-          width: WIDTH,
-          height: HEIGHT,
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#0b0b10',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 100%)',
-          }}
-        />
-        <div
-          style={{
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: 48,
-            gap: 28,
-            color: 'white',
-          }}
-        >
+      <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', flexDirection: 'column', backgroundColor: '#0b0b10', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 100%)' }} />
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: 48, gap: 28, color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            <img
-              src={pfpDataUrl}
-              alt=""
-              width={120}
-              height={120}
-              style={{
-                borderRadius: 9999,
-                border: '4px solid rgba(255,255,255,0.15)',
-                objectFit: 'cover',
-                background: '#111',
-              }}
-            />
+            {pfpDataUrl ? (
+              <img
+                src={pfpDataUrl}
+                alt=""
+                width={120}
+                height={120}
+                style={{ borderRadius: 9999, border: '4px solid rgba(255,255,255,0.15)', objectFit: 'cover', background: '#111' }}
+              />
+            ) : (
+              <div style={{ width: 120, height: 120, display: 'flex', borderRadius: 9999, background: '#222', border: '4px solid rgba(255,255,255,0.15)' }} />
+            )}
+
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ fontSize: 48, fontWeight: 700 }}>{username}</div>
-              <div style={{ fontSize: 28, opacity: 0.9 }}>Level {level}</div>
+              <div style={{ display: 'flex', fontSize: 48, fontWeight: 700 }}>{username}</div>
+              <div style={{ display: 'flex', fontSize: 28, opacity: 0.9 }}>Level {level}</div>
             </div>
+
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  paddingTop: 10,
-                  paddingBottom: 10,
-                  paddingLeft: 18,
-                  paddingRight: 18,
-                  borderRadius: 9999,
-                  background: '#A78BFA',
-                  color: '#0b0b10',
-                  fontWeight: 800,
-                  fontSize: 28,
-                }}
-              >
+              <div style={{ display: 'flex', padding: '10px 18px', borderRadius: 9999, background: '#A78BFA', color: '#0b0b10', fontWeight: 800, fontSize: 28 }}>
                 Rank #{rank}
               </div>
             </div>
@@ -181,24 +111,8 @@ export async function GET(req: Request) {
             <div style={{ display: 'flex', fontSize: 26, opacity: 0.9 }}>
               XP {xpCurrent} / {xpNext} ({progressPct}%)
             </div>
-            <div
-              style={{
-                display: 'flex',
-                width: barWidth,
-                height: 28,
-                borderRadius: 9999,
-                background: 'rgba(255,255,255,0.12)',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  width: fillWidth,
-                  height: '100%',
-                  background: '#60A5FA',
-                }}
-              />
+            <div style={{ display: 'flex', width: barWidth + 'px', height: '28px', borderRadius: 9999, background: 'rgba(255,255,255,0.12)', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', width: fillWidth + 'px', height: '100%', background: '#60A5FA' }} />
             </div>
           </div>
 
@@ -210,12 +124,8 @@ export async function GET(req: Request) {
       </div>
     );
 
-    return new ImageResponse(img, {
-      width: WIDTH,
-      height: HEIGHT,
-      headers: { 'Cache-Control': 'no-store' },
-    });
+    return new ImageResponse(img, { width: WIDTH, height: HEIGHT, headers: { 'Cache-Control': 'no-store' } });
   } catch {
-    return renderSafe('Unable to generate image');
+    return safe('FitLocker');
   }
 }
