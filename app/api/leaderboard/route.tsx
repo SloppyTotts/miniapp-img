@@ -20,7 +20,6 @@ function parseIntSafe(v: string | null, dflt: number): number {
   return Number.isFinite(n) && n >= 0 ? n : dflt;
 }
 
-// Edge-safe base64 from ArrayBuffer
 function arrayBufferToBase64(buf: ArrayBuffer): string {
   let binary = '';
   const bytes = new Uint8Array(buf);
@@ -28,10 +27,7 @@ function arrayBufferToBase64(buf: ArrayBuffer): string {
   return btoa(binary);
 }
 
-async function fetchAsDataUrl(
-  url: string | null | undefined,
-  fallbackUrl: string
-): Promise<string> {
+async function fetchAsDataUrl(url: string | null | undefined, fallbackUrl: string): Promise<string> {
   const target = url && url.trim() ? url : fallbackUrl;
 
   const tryFetch = async (u: string) => {
@@ -64,7 +60,6 @@ async function fetchAsDataUrl(
     }
   }
 
-  // 1x1 transparent PNG
   return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
 }
 
@@ -107,7 +102,6 @@ export async function GET(req: Request) {
 
     const pfpDataUrl = await fetchAsDataUrl(pfpParam, DEFAULT_PFP_URL);
 
-    // Fixed-width progress bar to avoid % width crashes
     const barWidth = 1000;
     const progress = Math.max(0, Math.min(1, xpNext > 0 ? xpCurrent / xpNext : 0));
     const fillWidth = Math.max(0, Math.min(barWidth, Math.round(barWidth * progress)));
@@ -125,7 +119,6 @@ export async function GET(req: Request) {
           overflow: 'hidden',
         }}
       >
-        {/* Simple overlay only (no external background image) */}
         <div
           style={{
             position: 'absolute',
@@ -133,10 +126,10 @@ export async function GET(req: Request) {
             left: 0,
             right: 0,
             bottom: 0,
+            display: 'flex',
             background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 100%)',
           }}
         />
-
         <div
           style={{
             position: 'relative',
@@ -160,15 +153,14 @@ export async function GET(req: Request) {
                 background: '#111',
               }}
             />
-
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontSize: 48, fontWeight: 700 }}>{username}</div>
               <div style={{ fontSize: 28, opacity: 0.9 }}>Level {level}</div>
             </div>
-
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
               <div
                 style={{
+                  display: 'flex',
                   paddingTop: 10,
                   paddingBottom: 10,
                   paddingLeft: 18,
@@ -186,11 +178,12 @@ export async function GET(req: Request) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-            <div style={{ fontSize: 26, opacity: 0.9 }}>
+            <div style={{ display: 'flex', fontSize: 26, opacity: 0.9 }}>
               XP {xpCurrent} / {xpNext} ({progressPct}%)
             </div>
             <div
               style={{
+                display: 'flex',
                 width: barWidth,
                 height: 28,
                 borderRadius: 9999,
@@ -200,6 +193,7 @@ export async function GET(req: Request) {
             >
               <div
                 style={{
+                  display: 'flex',
                   width: fillWidth,
                   height: '100%',
                   background: '#60A5FA',
@@ -208,9 +202,9 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-          <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between' }}>
-            <div style={{ fontSize: 24, opacity: 0.85 }}>fitlocker.io</div>
-            <div style={{ fontSize: 24, opacity: 0.85 }}>#FitLocker #Base #Fitness</div>
+          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
+            <div style={{ display: 'flex', fontSize: 24, opacity: 0.85 }}>fitlocker.io</div>
+            <div style={{ display: 'flex', fontSize: 24, opacity: 0.85 }}>#FitLocker #Base #Fitness</div>
           </div>
         </div>
       </div>
