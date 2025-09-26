@@ -104,7 +104,7 @@ export async function GET(req: Request) {
             ) : (
               <div style={{ width: 170, height: 170, display: 'flex', borderRadius: 9999, background: '#222', border: '4px solid rgba(255,255,255,0.15)' }} />
             )}
-            <div style={{ display: 'flex', fontSize: 52, fontWeight: 700 }}>@{username}</div>
+            <div style={{ display: 'flex', fontSize: 52, fontWeight: 700 }}>{username}</div>
             <div style={{ display: 'flex', fontSize: 26, opacity: 0.9 }}>Rank #{rank}</div>
           </div>
 
