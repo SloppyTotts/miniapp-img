@@ -237,191 +237,208 @@ export async function GET(req: Request) {
     // Build the card image
     const img = (
       <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', flexDirection: 'column', position: 'relative', background: '#0b0b10' }}>
-        {/* Template Background (if provided) */}
-        {templateBgDataUrl && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              backgroundImage: `url(${templateBgDataUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              opacity: bgOpacity,
-            }}
-          />
-        )}
+        {/* Background layers container - all absolutely positioned */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: WIDTH, height: HEIGHT, display: 'flex' }}>
+          {/* Template Background (if provided) */}
+          {templateBgDataUrl && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                backgroundImage: `url(${templateBgDataUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: bgOpacity,
+                display: 'flex',
+              }}
+            />
+          )}
+          
+          {/* Background gradient with tier colors (if no template) */}
+          {!templateBgDataUrl && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: tierColors.gradient,
+                opacity: 0.9 * bgIntensity * bgOpacity,
+                display: 'flex',
+              }}
+            />
+          )}
         
-        {/* Background gradient with tier colors (if no template) */}
-        {!templateBgDataUrl && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: tierColors.gradient,
-              opacity: 0.9 * bgIntensity * bgOpacity,
-            }}
-          />
-        )}
-        
-        {/* Background style overlay */}
-        {backgroundStyle === 'mesh_gradient' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0%, transparent 50%)',
-              opacity: 0.3 * bgIntensity,
-            }}
-          />
-        )}
-        {backgroundStyle === 'neon' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: `radial-gradient(circle at center, ${tierColors.primary}40 0%, transparent 70%)`,
-              opacity: 0.5 * bgIntensity,
-            }}
-          />
-        )}
+          {/* Background style overlay */}
+          {backgroundStyle === 'mesh_gradient' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+                opacity: 0.3 * bgIntensity,
+                display: 'flex',
+              }}
+            />
+          )}
+          {backgroundStyle === 'neon' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: `radial-gradient(circle at center, ${tierColors.primary}40 0%, transparent 70%)`,
+                opacity: 0.5 * bgIntensity,
+                display: 'flex',
+              }}
+            />
+          )}
 
-        {/* Background Pattern Overlays */}
-        {backgroundPattern === 'geometric' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 40px)',
-            }}
-          />
-        )}
-        {backgroundPattern === 'grid' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-              backgroundSize: '40px 40px',
-            }}
-          />
-        )}
-        {backgroundPattern === 'dots' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)',
-              backgroundSize: '30px 30px',
-            }}
-          />
-        )}
-        {backgroundPattern === 'waves' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px)',
-            }}
-          />
-        )}
-        {backgroundPattern === 'circuit' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,255,255,0.1) 10px, rgba(0,255,255,0.1) 11px, transparent 11px, transparent 20px)',
-            }}
-          />
-        )}
-        {backgroundPattern === 'hexagon' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'repeating-linear-gradient(60deg, transparent, transparent 25px, rgba(255,255,255,0.05) 25px, rgba(255,255,255,0.05) 26px, transparent 26px, transparent 50px)',
-            }}
-          />
-        )}
-        {backgroundPattern === 'holographic' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'linear-gradient(135deg, rgba(255,0,150,0.1) 0%, rgba(0,255,255,0.1) 50%, rgba(255,200,0,0.1) 100%)',
-            }}
-          />
-        )}
-        {backgroundPattern === 'carbon_fiber' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.1) 2px)',
-            }}
-          />
-        )}
-        {backgroundPattern === 'vignette' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%)',
-            }}
-          />
-        )}
+          {/* Background Pattern Overlays */}
+          {backgroundPattern === 'geometric' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 40px)',
+                display: 'flex',
+              }}
+            />
+          )}
+          {backgroundPattern === 'grid' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+                backgroundSize: '40px 40px',
+                display: 'flex',
+              }}
+            />
+          )}
+          {backgroundPattern === 'dots' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)',
+                backgroundSize: '30px 30px',
+                display: 'flex',
+              }}
+            />
+          )}
+          {backgroundPattern === 'waves' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px)',
+                display: 'flex',
+              }}
+            />
+          )}
+          {backgroundPattern === 'circuit' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,255,255,0.1) 10px, rgba(0,255,255,0.1) 11px, transparent 11px, transparent 20px)',
+                display: 'flex',
+              }}
+            />
+          )}
+          {backgroundPattern === 'hexagon' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'repeating-linear-gradient(60deg, transparent, transparent 25px, rgba(255,255,255,0.05) 25px, rgba(255,255,255,0.05) 26px, transparent 26px, transparent 50px)',
+                display: 'flex',
+              }}
+            />
+          )}
+          {backgroundPattern === 'holographic' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'linear-gradient(135deg, rgba(255,0,150,0.1) 0%, rgba(0,255,255,0.1) 50%, rgba(255,200,0,0.1) 100%)',
+                display: 'flex',
+              }}
+            />
+          )}
+          {backgroundPattern === 'carbon_fiber' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.1) 2px)',
+                display: 'flex',
+              }}
+            />
+          )}
+          {backgroundPattern === 'vignette' && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%)',
+                display: 'flex',
+              }}
+            />
+          )}
 
-        {/* Background Overlay (darkening layer) */}
-        {bgOverlay > 0 && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: WIDTH,
-              height: HEIGHT,
-              background: 'rgba(0,0,0,' + bgOverlay + ')',
-            }}
-          />
-        )}
+          {/* Background Overlay (darkening layer) */}
+          {bgOverlay > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: WIDTH,
+                height: HEIGHT,
+                background: 'rgba(0,0,0,' + bgOverlay + ')',
+                display: 'flex',
+              }}
+            />
+          )}
+        </div>
 
         {/* Content */}
         <div style={{ display: 'flex', flexDirection: 'column', padding: PADDING, position: 'relative', zIndex: 1, height: '100%' }}>
@@ -661,6 +678,7 @@ export async function GET(req: Request) {
                 borderRadius: 16,
                 boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
                 pointerEvents: 'none',
+                display: 'flex',
               }}
             />
           )}
@@ -676,6 +694,7 @@ export async function GET(req: Request) {
                 borderRadius: 16,
                 boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
                 pointerEvents: 'none',
+                display: 'flex',
               }}
             />
           )}
@@ -691,6 +710,7 @@ export async function GET(req: Request) {
                 borderRadius: 16,
                 boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
                 pointerEvents: 'none',
+                display: 'flex',
               }}
             />
           )}
@@ -706,6 +726,7 @@ export async function GET(req: Request) {
                 borderRadius: 16,
                 boxShadow: `0 0 ${Math.max(borderGlowVal, 20)}px ${borderColorVal}, inset 0 0 ${Math.max(borderGlowVal, 20)}px ${borderColorVal}40`,
                 pointerEvents: 'none',
+                display: 'flex',
               }}
             />
           )}
@@ -721,6 +742,7 @@ export async function GET(req: Request) {
                 borderRadius: 16,
                 boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
                 pointerEvents: 'none',
+                display: 'flex',
               }}
             />
           )}
