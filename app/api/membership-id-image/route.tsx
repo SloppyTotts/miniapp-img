@@ -516,6 +516,7 @@ export async function GET(req: Request) {
                     overflow: 'hidden',
                     boxShadow: pfpGlowVal > 0 ? `0 0 ${pfpGlowVal}px ${pfpBorderColorVal || tierColors.primary}40` : 'none',
                     clipPath: pfpShape === 'hexagon' ? 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)' : pfpShape === 'diamond' ? 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' : 'none',
+                    display: 'flex',
                   }}
                 >
                   <img src={pfpDataUrl} alt="" width={pfpSizeVal} height={pfpSizeVal} style={{ objectFit: 'cover' }} />
@@ -530,6 +531,7 @@ export async function GET(req: Request) {
                     background: '#222',
                     boxShadow: pfpGlowVal > 0 ? `0 0 ${pfpGlowVal}px ${pfpBorderColorVal || tierColors.primary}40` : 'none',
                     clipPath: pfpShape === 'hexagon' ? 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)' : pfpShape === 'diamond' ? 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' : 'none',
+                    display: 'flex',
                   }}
                 />
               )}
@@ -665,88 +667,89 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-          {/* Border Style */}
-          {borderStyle === 'standard' && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: WIDTH,
-                height: HEIGHT,
-                border: `${borderThick}px solid ${borderColorVal}`,
-                borderRadius: 16,
-                boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
-                pointerEvents: 'none',
-                display: 'flex',
-              }}
-            />
-          )}
-          {borderStyle === 'double' && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: WIDTH,
-                height: HEIGHT,
-                border: `${borderThick}px solid ${borderColorVal}`,
-                borderRadius: 16,
-                boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
-                pointerEvents: 'none',
-                display: 'flex',
-              }}
-            />
-          )}
-          {borderStyle === 'dashed' && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: WIDTH,
-                height: HEIGHT,
-                border: `${borderThick}px dashed ${borderColorVal}`,
-                borderRadius: 16,
-                boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
-                pointerEvents: 'none',
-                display: 'flex',
-              }}
-            />
-          )}
-          {borderStyle === 'neon' && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: WIDTH,
-                height: HEIGHT,
-                border: `${borderThick}px solid ${borderColorVal}`,
-                borderRadius: 16,
-                boxShadow: `0 0 ${Math.max(borderGlowVal, 20)}px ${borderColorVal}, inset 0 0 ${Math.max(borderGlowVal, 20)}px ${borderColorVal}40`,
-                pointerEvents: 'none',
-                display: 'flex',
-              }}
-            />
-          )}
-          {borderStyle === 'ornamental' && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: WIDTH,
-                height: HEIGHT,
-                border: `${borderThick}px solid ${borderColorVal}`,
-                borderRadius: 16,
-                boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
-                pointerEvents: 'none',
-                display: 'flex',
-              }}
-            />
-          )}
         </div>
+
+        {/* Border Style - at root level, not inside content */}
+        {borderStyle === 'standard' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: WIDTH,
+              height: HEIGHT,
+              border: `${borderThick}px solid ${borderColorVal}`,
+              borderRadius: 16,
+              boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
+              pointerEvents: 'none',
+              display: 'flex',
+            }}
+          />
+        )}
+        {borderStyle === 'double' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: WIDTH,
+              height: HEIGHT,
+              border: `${borderThick}px solid ${borderColorVal}`,
+              borderRadius: 16,
+              boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
+              pointerEvents: 'none',
+              display: 'flex',
+            }}
+          />
+        )}
+        {borderStyle === 'dashed' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: WIDTH,
+              height: HEIGHT,
+              border: `${borderThick}px dashed ${borderColorVal}`,
+              borderRadius: 16,
+              boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
+              pointerEvents: 'none',
+              display: 'flex',
+            }}
+          />
+        )}
+        {borderStyle === 'neon' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: WIDTH,
+              height: HEIGHT,
+              border: `${borderThick}px solid ${borderColorVal}`,
+              borderRadius: 16,
+              boxShadow: `0 0 ${Math.max(borderGlowVal, 20)}px ${borderColorVal}, inset 0 0 ${Math.max(borderGlowVal, 20)}px ${borderColorVal}40`,
+              pointerEvents: 'none',
+              display: 'flex',
+            }}
+          />
+        )}
+        {borderStyle === 'ornamental' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: WIDTH,
+              height: HEIGHT,
+              border: `${borderThick}px solid ${borderColorVal}`,
+              borderRadius: 16,
+              boxShadow: borderGlowVal > 0 ? `0 0 ${borderGlowVal}px ${borderColorVal}40` : 'none',
+              pointerEvents: 'none',
+              display: 'flex',
+            }}
+          />
+        )}
       </div>
     );
 
