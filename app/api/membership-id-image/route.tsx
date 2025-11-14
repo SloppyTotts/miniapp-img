@@ -153,6 +153,13 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     if (searchParams.get('safe') === '1') return safe('FitLocker');
+    
+    console.log('[MEMBERSHIP-IMAGE] Starting image generation with params:', {
+      username: searchParams.get('username'),
+      memberNumber: searchParams.get('memberNumber'),
+      tier: searchParams.get('tier'),
+      level: searchParams.get('level')
+    });
 
     // Required parameters
     const username = searchParams.get('username') || DEFAULT_USERNAME;
@@ -705,15 +712,20 @@ export async function GET(req: Request) {
       </div>
     );
 
-    return new ImageResponse(img, {
+    console.log('[MEMBERSHIP-IMAGE] JSX built successfully, creating ImageResponse');
+    const response = new ImageResponse(img, {
       width: WIDTH,
       height: HEIGHT,
       headers: {
         'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
       },
     });
+    console.log('[MEMBERSHIP-IMAGE] ImageResponse created successfully');
+    return response;
   } catch (error) {
-    console.error('Error generating membership ID image:', error);
+    console.error('[MEMBERSHIP-IMAGE] Error generating membership ID image:', error);
+    console.error('[MEMBERSHIP-IMAGE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('[MEMBERSHIP-IMAGE] Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     return safe('FitLocker');
   }
 }
