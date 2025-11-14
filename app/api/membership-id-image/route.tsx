@@ -161,6 +161,22 @@ export async function GET(req: Request) {
       level: searchParams.get('level')
     });
 
+    // Test with minimal version first - if this works, we know the issue is in the complex JSX
+    const testMinimal = searchParams.get('minimal') === '1';
+    if (testMinimal) {
+      console.log('[MEMBERSHIP-IMAGE] Using minimal test version');
+      const minimalImg = (
+        <div style={{ width: WIDTH, height: HEIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0052FF', color: '#fff', fontSize: 48, fontWeight: 700 }}>
+          Test Membership ID
+        </div>
+      );
+      return new ImageResponse(minimalImg, {
+        width: WIDTH,
+        height: HEIGHT,
+        headers: { 'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' }
+      });
+    }
+
     // Required parameters
     const username = searchParams.get('username') || DEFAULT_USERNAME;
     const memberNumber = parseIntSafe(searchParams.get('memberNumber'), DEFAULT_MEMBER_NUMBER);
