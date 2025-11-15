@@ -189,6 +189,7 @@ export async function GET(req: Request) {
     const backgroundStyle = searchParams.get('backgroundStyle') || 'classic_gradient';
     const backgroundPattern = searchParams.get('backgroundPattern') || 'none';
     const templateBackground = searchParams.get('templateBackground') || '';
+    const backgroundColors = searchParams.get('backgroundColors')?.split(',') || null; // Custom colors (comma-separated hex)
     const backgroundIntensity = searchParams.get('backgroundIntensity') || 'normal';
     const backgroundOpacity = searchParams.get('backgroundOpacity') || 'full';
     const backgroundOverlay = searchParams.get('backgroundOverlay') || 'none';
@@ -206,6 +207,10 @@ export async function GET(req: Request) {
     const ref = searchParams.get('ref') || '';
     const chainId = searchParams.get('chain') || '';
     const accentElements = searchParams.get('accentElements')?.split(',') || [];
+    const cardStyle = searchParams.get('cardStyle') || 'cyberpunk';
+    const cardLayout = searchParams.get('cardLayout') || 'showcase';
+    const leftStatLabelSize = parseIntSafe(searchParams.get('leftStatLabelSize'), 24);
+    const rightStatLabelSize = parseIntSafe(searchParams.get('rightStatLabelSize'), 24);
 
     // Get tier colors
     const tierColors = TIER_COLORS[tier] || TIER_COLORS.blue;
@@ -257,7 +262,7 @@ export async function GET(req: Request) {
             />
           )}
           
-          {/* Background gradient with tier colors (if no template) */}
+          {/* Background gradient with custom colors or tier colors (if no template) */}
           {!templateBgDataUrl && (
             <div
               style={{
@@ -266,7 +271,9 @@ export async function GET(req: Request) {
                 left: 0,
                 width: WIDTH,
                 height: HEIGHT,
-                background: tierColors.gradient,
+                background: backgroundColors && backgroundColors.length >= 2
+                  ? `linear-gradient(135deg, ${backgroundColors[0]} 0%, ${backgroundColors[1]} ${backgroundColors.length === 2 ? '100%' : '50%'}${backgroundColors.length >= 3 ? `, ${backgroundColors[2]} 100%` : ''})`
+                  : tierColors.gradient,
                 opacity: 0.9 * bgIntensity * bgOpacity,
                 display: 'flex',
               }}
@@ -582,28 +589,28 @@ export async function GET(req: Request) {
                   )}
                   {selectedStats.includes('streak') && identityStreak > 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ display: 'flex', fontSize: 20, color: '#fff', fontWeight: 600 }}>
+                      <div style={{ display: 'flex', fontSize: leftStatLabelSize, color: '#fff', fontWeight: 600 }}>
                         🔥 Streak: {identityStreak} days
                       </div>
                     </div>
                   )}
                   {selectedStats.includes('weeklyXP') && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ display: 'flex', fontSize: 20, color: '#fff', fontWeight: 600 }}>
+                      <div style={{ display: 'flex', fontSize: selectedStats.indexOf('streak') >= 0 && selectedStats.indexOf('streak') < selectedStats.indexOf('weeklyXP') ? rightStatLabelSize : leftStatLabelSize, color: '#fff', fontWeight: 600 }}>
                         ⚡ Weekly XP
                       </div>
                     </div>
                   )}
                   {selectedStats.includes('workouts') && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ display: 'flex', fontSize: 20, color: '#fff', fontWeight: 600 }}>
+                      <div style={{ display: 'flex', fontSize: selectedStats.filter(s => s).length > 1 && selectedStats.indexOf('workouts') === 1 ? rightStatLabelSize : leftStatLabelSize, color: '#fff', fontWeight: 600 }}>
                         💪 Workouts
                       </div>
                     </div>
                   )}
                   {selectedStats.includes('rank') && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ display: 'flex', fontSize: 20, color: '#fff', fontWeight: 600 }}>
+                      <div style={{ display: 'flex', fontSize: selectedStats.filter(s => s).length > 1 && selectedStats.indexOf('rank') === 1 ? rightStatLabelSize : leftStatLabelSize, color: '#fff', fontWeight: 600 }}>
                         🏆 Rank
                       </div>
                     </div>
