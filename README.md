@@ -193,3 +193,4 @@ return new ImageResponse(
 - [Mini App Docs - Sharing your app](https://miniapps.farcaster.xyz/docs/guides/sharing)
 - [Next Docs - Image Response](https://nextjs.org/docs/14/app/api-reference/functions/image-response)
 
+
