@@ -468,9 +468,9 @@ export async function GET(req: Request) {
         </div>
 
         {/* Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', padding: PADDING, position: 'relative', zIndex: 1, height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', padding: PADDING, position: 'relative', zIndex: 1, height: '100%', justifyContent: 'space-between' }}>
           {/* Header Section - Centered Member ID */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, paddingTop: 20 }}>
             {/* Member Number Badge - Centered and larger */}
             <div
               style={{
@@ -538,8 +538,8 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-          {/* Main Content Area - Centered layout with stats below */}
-          <div style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 40 }}>
+          {/* Main Content Area - Centered in middle of card */}
+          <div style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 40, minHeight: 0, marginTop: -100, marginBottom: -100 }}>
             {/* Profile Picture Section */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
               {pfpDataUrl ? (
@@ -711,8 +711,8 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-          {/* Spacer to push content to center */}
-          <div style={{ flexShrink: 0, height: 0 }}></div>
+          {/* Footer spacer */}
+          <div style={{ flexShrink: 0, height: 20 }}></div>
 
           {/* Border Style - at root level, not inside content */}
           {borderStyle === 'standard' && (
