@@ -711,10 +711,8 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-        </div>
-
-        {/* Border Style - at root level, not inside content */}
-        {borderStyle === 'standard' && (
+          {/* Border Style - at root level, not inside content */}
+          {borderStyle === 'standard' && (
           <div
             style={{
               position: 'absolute',
