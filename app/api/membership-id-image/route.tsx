@@ -186,6 +186,7 @@ export async function GET(req: Request) {
     // Optional parameters
     const memberBand = searchParams.get('memberBand') || 'standard';
     const identityStreak = parseIntSafe(searchParams.get('identityStreak'), DEFAULT_IDENTITY_STREAK);
+    const rank = parseIntSafe(searchParams.get('rank'), 0); // Leaderboard rank
     const backgroundStyle = searchParams.get('backgroundStyle') || 'classic_gradient';
     const backgroundPattern = searchParams.get('backgroundPattern') || 'none';
     const templateBackground = searchParams.get('templateBackground') || '';
@@ -209,8 +210,8 @@ export async function GET(req: Request) {
     const accentElements = searchParams.get('accentElements')?.split(',') || [];
     const cardStyle = searchParams.get('cardStyle') || 'cyberpunk';
     const cardLayout = searchParams.get('cardLayout') || 'showcase';
-    const leftStatLabelSize = parseIntSafe(searchParams.get('leftStatLabelSize'), 24);
-    const rightStatLabelSize = parseIntSafe(searchParams.get('rightStatLabelSize'), 24);
+    const leftStatLabelSize = parseIntSafe(searchParams.get('leftStatLabelSize'), 20);
+    const rightStatLabelSize = parseIntSafe(searchParams.get('rightStatLabelSize'), 20);
 
     // Get tier colors
     const tierColors = TIER_COLORS[tier] || TIER_COLORS.blue;
@@ -449,27 +450,36 @@ export async function GET(req: Request) {
 
         {/* Content */}
         <div style={{ display: 'flex', flexDirection: 'column', padding: PADDING, position: 'relative', zIndex: 1, height: '100%' }}>
-          {/* Header Section */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-            <div style={{ display: 'flex', fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '0.1em' }}>
-              FITLOCKER
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* Member Number Badge */}
+          {/* Header Section - Centered Member ID */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+            {/* Member Number Badge - Centered and larger */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
+                MEMBER
+              </div>
               <div
                 style={{
                   display: 'flex',
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  background: `${tierColors.primary}33`,
+                  padding: '12px 24px',
+                  borderRadius: 12,
+                  background: `${tierColors.primary}4D`,
                   color: tierColors.accent,
-                  fontSize: 14,
-                  fontWeight: 800,
-                  letterSpacing: '0.05em',
+                  fontSize: 80,
+                  fontWeight: 900,
+                  letterSpacing: '0.1em',
+                  textShadow: '0 2px 8px rgba(0,0,0,0.5)',
                 }}
               >
-                #{String(memberNumber).padStart(4, '0')}
+                {String(memberNumber).padStart(3, '0')}
               </div>
+            </div>
               
               {/* Member Band Badge */}
               {bandColors && (
@@ -544,7 +554,7 @@ export async function GET(req: Request) {
               )}
               
               {/* Username */}
-              <div style={{ display: 'flex', fontSize: 32, fontWeight: 700, color: '#fff' }}>
+              <div style={{ display: 'flex', fontSize: 52, fontWeight: 900, color: '#fff', letterSpacing: '0.02em', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
                 {username}
               </div>
               
@@ -566,71 +576,69 @@ export async function GET(req: Request) {
             </div>
 
             {/* Right: Stats Section */}
-            <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 32, justifyContent: 'center' }}>
               {/* Selected Stats */}
               {selectedStats.length > 0 ? (
                 <>
-                  {selectedStats.includes('level') && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          padding: '10px 20px',
-                          borderRadius: 12,
-                          background: tierColors.primary,
-                          color: '#fff',
-                          fontSize: 24,
-                          fontWeight: 800,
-                        }}
-                      >
-                        ⭐ Level {level}
+                  {selectedStats.includes('rank') && rank > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(96,165,250,0.3)' }}>
+                        {rank}
+                      </div>
+                      <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
+                        RANK
                       </div>
                     </div>
                   )}
                   {selectedStats.includes('streak') && identityStreak > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ display: 'flex', fontSize: leftStatLabelSize, color: '#fff', fontWeight: 600 }}>
-                        🔥 Streak: {identityStreak} days
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(255,69,0,0.3)' }}>
+                        {identityStreak}
+                      </div>
+                      <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
+                        STREAK
+                      </div>
+                    </div>
+                  )}
+                  {selectedStats.includes('level') && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.3)' }}>
+                        {level}
+                      </div>
+                      <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
+                        LEVEL
                       </div>
                     </div>
                   )}
                   {selectedStats.includes('weeklyXP') && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ display: 'flex', fontSize: selectedStats.indexOf('streak') >= 0 && selectedStats.indexOf('streak') < selectedStats.indexOf('weeklyXP') ? rightStatLabelSize : leftStatLabelSize, color: '#fff', fontWeight: 600 }}>
-                        ⚡ Weekly XP
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
+                        XP
+                      </div>
+                      <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
+                        WEEKLY XP
                       </div>
                     </div>
                   )}
                   {selectedStats.includes('workouts') && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ display: 'flex', fontSize: selectedStats.filter(s => s).length > 1 && selectedStats.indexOf('workouts') === 1 ? rightStatLabelSize : leftStatLabelSize, color: '#fff', fontWeight: 600 }}>
-                        💪 Workouts
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
+                        💪
                       </div>
-                    </div>
-                  )}
-                  {selectedStats.includes('rank') && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ display: 'flex', fontSize: selectedStats.filter(s => s).length > 1 && selectedStats.indexOf('rank') === 1 ? rightStatLabelSize : leftStatLabelSize, color: '#fff', fontWeight: 600 }}>
-                        🏆 Rank
+                      <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
+                        WORKOUTS
                       </div>
                     </div>
                   )}
                 </>
               ) : (
                 /* Default: Show Level if no stats selected */
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      padding: '10px 20px',
-                      borderRadius: 12,
-                      background: tierColors.primary,
-                      color: '#fff',
-                      fontSize: 24,
-                      fontWeight: 800,
-                    }}
-                  >
-                    Level {level}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                  <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
+                    {level}
+                  </div>
+                  <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
+                    LEVEL
                   </div>
                 </div>
               )}
