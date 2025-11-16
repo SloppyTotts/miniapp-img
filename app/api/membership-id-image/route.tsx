@@ -711,6 +711,9 @@ export async function GET(req: Request) {
             </div>
           </div>
 
+          {/* Spacer to push content to center */}
+          <div style={{ flexShrink: 0, height: 0 }}></div>
+
           {/* Border Style - at root level, not inside content */}
           {borderStyle === 'standard' && (
           <div
