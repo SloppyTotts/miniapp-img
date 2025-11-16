@@ -154,11 +154,15 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     if (searchParams.get('safe') === '1') return safe('FitLocker');
     
+    const selectedStatsParam = searchParams.get('selectedStats');
     console.log('[MEMBERSHIP-IMAGE] Starting image generation with params:', {
       username: searchParams.get('username'),
       memberNumber: searchParams.get('memberNumber'),
       tier: searchParams.get('tier'),
-      level: searchParams.get('level')
+      level: searchParams.get('level'),
+      selectedStats: selectedStatsParam,
+      rank: searchParams.get('rank'),
+      identityStreak: searchParams.get('identityStreak')
     });
 
     // Test with minimal version first - if this works, we know the issue is in the complex JSX
@@ -198,7 +202,22 @@ export async function GET(req: Request) {
     const borderThickness = searchParams.get('borderThickness') || 'normal';
     const borderGlow = searchParams.get('borderGlow') || 'subtle';
     const borderColor = searchParams.get('borderColor') || 'tier';
-    const selectedStats = searchParams.get('selectedStats')?.split(',') || [];
+    // Parse selectedStats, filtering out empty strings
+    const selectedStatsRaw = searchParams.get('selectedStats') || '';
+    const selectedStats = selectedStatsRaw ? selectedStatsRaw.split(',').filter(s => s.trim().length > 0) : [];
+    
+    // For default card, if no stats selected, default to rank and streak
+    const useDefaultStats = selectedStats.length === 0;
+    const statsToShow = useDefaultStats ? ['rank', 'streak'] : selectedStats;
+    
+    console.log('[MEMBERSHIP-IMAGE] Stats configuration:', {
+      selectedStatsParam: selectedStatsRaw,
+      selectedStats,
+      useDefaultStats,
+      statsToShow,
+      rank,
+      identityStreak
+    });
     const pfpParam = searchParams.get('pfp') || '';
     const pfpSize = searchParams.get('pfpSize') || 'medium';
     const pfpShape = searchParams.get('pfpShape') || 'circle';
@@ -576,11 +595,11 @@ export async function GET(req: Request) {
             </div>
 
             {/* Right: Stats Section */}
-            <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 32, justifyContent: 'center' }}>
-              {/* Selected Stats */}
-              {selectedStats.length > 0 ? (
+            <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 32, justifyContent: 'center', alignItems: 'flex-start' }}>
+              {/* Selected Stats - Always show rank and streak for default card */}
+              {statsToShow.length > 0 ? (
                 <>
-                  {selectedStats.includes('rank') && (
+                  {statsToShow.includes('rank') && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                       <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(96,165,250,0.3)' }}>
                         {rank || 0}
@@ -590,7 +609,7 @@ export async function GET(req: Request) {
                       </div>
                     </div>
                   )}
-                  {selectedStats.includes('streak') && (
+                  {statsToShow.includes('streak') && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                       <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(255,69,0,0.3)' }}>
                         {identityStreak || 0}
@@ -600,7 +619,7 @@ export async function GET(req: Request) {
                       </div>
                     </div>
                   )}
-                  {selectedStats.includes('level') && (
+                  {statsToShow.includes('level') && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                       <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.3)' }}>
                         {level}
@@ -610,7 +629,7 @@ export async function GET(req: Request) {
                       </div>
                     </div>
                   )}
-                  {selectedStats.includes('weeklyXP') && (
+                  {statsToShow.includes('weeklyXP') && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                       <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
                         XP
@@ -620,7 +639,7 @@ export async function GET(req: Request) {
                       </div>
                     </div>
                   )}
-                  {selectedStats.includes('workouts') && (
+                  {statsToShow.includes('workouts') && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                       <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
                         💪
@@ -632,15 +651,25 @@ export async function GET(req: Request) {
                   )}
                 </>
               ) : (
-                /* Default: Show Level if no stats selected */
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
-                  <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
-                    {level}
+                /* Fallback: Show rank and streak even if statsToShow is empty */
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(96,165,250,0.3)' }}>
+                      {rank || 0}
+                    </div>
+                    <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
+                      RANK
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
-                    LEVEL
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(255,69,0,0.3)' }}>
+                      {identityStreak || 0}
+                    </div>
+                    <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
+                      STREAK
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               {/* Identity Streak (if accent element) */}
