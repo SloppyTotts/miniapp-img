@@ -520,9 +520,9 @@ export async function GET(req: Request) {
           </div>
 
           {/* Main Content Area */}
-          <div style={{ display: 'flex', flex: 1, gap: 32, alignItems: 'center' }}>
+          <div style={{ display: 'flex', flex: 1, gap: 48, alignItems: 'center', justifyContent: 'center' }}>
             {/* Left: Profile Picture */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
               {pfpDataUrl ? (
                 <div
                   style={{
@@ -566,7 +566,7 @@ export async function GET(req: Request) {
                   borderRadius: 12,
                   background: `${tierColors.primary}33`,
                   color: tierColors.accent,
-                  fontSize: 18,
+                  fontSize: 26,
                   fontWeight: 800,
                   letterSpacing: '0.05em',
                 }}
@@ -580,20 +580,20 @@ export async function GET(req: Request) {
               {/* Selected Stats */}
               {selectedStats.length > 0 ? (
                 <>
-                  {selectedStats.includes('rank') && rank > 0 && (
+                  {selectedStats.includes('rank') && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                       <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(96,165,250,0.3)' }}>
-                        {rank}
+                        {rank || 0}
                       </div>
                       <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
                         RANK
                       </div>
                     </div>
                   )}
-                  {selectedStats.includes('streak') && identityStreak > 0 && (
+                  {selectedStats.includes('streak') && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                       <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(255,69,0,0.3)' }}>
-                        {identityStreak}
+                        {identityStreak || 0}
                       </div>
                       <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.15em' }}>
                         STREAK
