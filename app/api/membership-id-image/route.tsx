@@ -538,9 +538,9 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-          {/* Main Content Area */}
-          <div style={{ display: 'flex', flex: 1, gap: 48, alignItems: 'center', justifyContent: 'center' }}>
-            {/* Left: Profile Picture */}
+          {/* Main Content Area - Centered layout with stats below */}
+          <div style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 40 }}>
+            {/* Profile Picture Section */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
               {pfpDataUrl ? (
                 <div
@@ -594,13 +594,13 @@ export async function GET(req: Request) {
               </div>
             </div>
 
-            {/* Right: Stats Section */}
-            <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 32, justifyContent: 'center', alignItems: 'flex-start' }}>
+            {/* Stats Section - Below profile picture */}
+            <div style={{ display: 'flex', flexDirection: 'row', gap: 64, justifyContent: 'center', alignItems: 'center' }}>
               {/* Selected Stats - Always show rank and streak for default card */}
               {statsToShow.length > 0 ? (
                 <>
                   {statsToShow.includes('rank') && (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                       <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(96,165,250,0.3)' }}>
                         {rank || 0}
                       </div>
@@ -610,7 +610,7 @@ export async function GET(req: Request) {
                     </div>
                   )}
                   {statsToShow.includes('streak') && (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                       <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(255,69,0,0.3)' }}>
                         {identityStreak || 0}
                       </div>
@@ -653,7 +653,7 @@ export async function GET(req: Request) {
               ) : (
                 /* Fallback: Show rank and streak even if statsToShow is empty */
                 <>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                     <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(96,165,250,0.3)' }}>
                       {rank || 0}
                     </div>
@@ -661,7 +661,7 @@ export async function GET(req: Request) {
                       RANK
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                     <div style={{ display: 'flex', fontSize: 84, fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 20px rgba(255,69,0,0.3)' }}>
                       {identityStreak || 0}
                     </div>
